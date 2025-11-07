@@ -5,6 +5,15 @@ import "../components"
 Page {
     id: firstPage
 
+    Component.onCompleted: {
+        console.log("FirstPage loaded - fetching conversations")
+        console.log("Authenticated:", slackAPI.isAuthenticated)
+        console.log("Workspace:", slackAPI.workspaceName)
+
+        // Load conversations automatically
+        slackAPI.fetchConversations()
+    }
+
     SilicaListView {
         id: conversationListView
         anchors.fill: parent
