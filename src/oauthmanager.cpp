@@ -16,7 +16,7 @@ const QString OAuthManager::CLIENT_ID = QString::fromUtf8(qgetenv("SLACKSHIP_CLI
     "YOUR_CLIENT_ID_HERE" : qgetenv("SLACKSHIP_CLIENT_ID"));
 const QString OAuthManager::CLIENT_SECRET = QString::fromUtf8(qgetenv("SLACKSHIP_CLIENT_SECRET").isEmpty() ?
     "YOUR_CLIENT_SECRET_HERE" : qgetenv("SLACKSHIP_CLIENT_SECRET"));
-const QString OAuthManager::REDIRECT_URI = "http://localhost:8080/callback";
+const QString OAuthManager::REDIRECT_URI = "slackship://oauth/callback";
 const QString OAuthManager::AUTHORIZATION_URL = "https://slack.com/oauth/v2/authorize";
 const QString OAuthManager::TOKEN_URL = "https://slack.com/api/oauth.v2.access";
 const QString OAuthManager::SCOPES = "channels:history,channels:read,channels:write,"

@@ -6,7 +6,7 @@ Page {
     id: oauthPage
 
     property string authUrl: ""
-    property string redirectUri: "http://localhost:8080/callback"
+    property string redirectUri: "slackship://oauth/callback"
 
     signal authCodeReceived(string code, string state)
     signal authError(string error)

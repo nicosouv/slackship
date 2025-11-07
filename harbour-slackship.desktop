@@ -4,3 +4,4 @@ X-Nemo-Application-Type=silica-qt5
 Name=SlackShip
 Icon=harbour-slackship
 Exec=harbour-slackship
+MimeType=x-scheme-handler/slackship;
