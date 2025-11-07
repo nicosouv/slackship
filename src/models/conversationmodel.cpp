@@ -39,6 +39,8 @@ QVariant ConversationModel::data(const QModelIndex &index, int role) const
         return conversation.topic;
     case PurposeRole:
         return conversation.purpose;
+    case UserIdRole:
+        return conversation.userId;
     default:
         return QVariant();
     }
@@ -57,6 +59,7 @@ QHash<int, QByteArray> ConversationModel::roleNames() const
     roles[LastMessageTimeRole] = "lastMessageTime";
     roles[TopicRole] = "topic";
     roles[PurposeRole] = "purpose";
+    roles[UserIdRole] = "userId";
     return roles;
 }
 
@@ -120,12 +123,14 @@ ConversationModel::Conversation ConversationModel::parseConversation(const QJson
     conv.name = json["name"].toString();
     conv.type = json["is_channel"].toBool() ? "channel" :
                 json["is_group"].toBool() ? "group" :
-                json["is_im"].toBool() ? "im" : "unknown";
+                json["is_im"].toBool() ? "im" :
+                json["is_mpim"].toBool() ? "mpim" : "unknown";
     conv.isPrivate = json["is_private"].toBool();
     conv.isMember = json["is_member"].toBool();
     conv.unreadCount = json["unread_count"].toInt();
     conv.lastMessage = "";
     conv.lastMessageTime = 0;
+    conv.userId = json["user"].toString();  // For DMs
 
     QJsonObject topic = json["topic"].toObject();
     conv.topic = topic["value"].toString();

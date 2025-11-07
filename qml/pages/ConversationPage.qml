@@ -7,11 +7,16 @@ Page {
 
     property string channelId
     property string channelName
+    property bool isSendingMessage: false
 
     Component.onCompleted: {
         console.log("ConversationPage loaded")
         console.log("Channel:", channelName, channelId)
         console.log("Message count:", messageModel.rowCount())
+    }
+
+    function refreshMessages() {
+        slackAPI.fetchConversationHistory(channelId)
     }
 
     SilicaListView {
@@ -85,17 +90,37 @@ Page {
                 EnterKey.onClicked: sendButton.clicked()
             }
 
-            IconButton {
-                id: sendButton
+            Item {
+                id: sendButtonContainer
+                width: Theme.iconSizeMedium
+                height: Theme.iconSizeMedium
                 anchors.verticalCenter: parent.verticalCenter
-                icon.source: "image://theme/icon-m-message"
-                enabled: messageInput.text.length > 0
 
-                onClicked: {
-                    if (messageInput.text.trim().length > 0) {
-                        slackAPI.sendMessage(channelId, messageInput.text)
-                        messageInput.text = ""
+                IconButton {
+                    id: sendButton
+                    anchors.fill: parent
+                    icon.source: "image://theme/icon-m-message"
+                    enabled: messageInput.text.length > 0 && !isSendingMessage
+                    visible: !isSendingMessage
+
+                    onClicked: {
+                        if (messageInput.text.trim().length > 0) {
+                            isSendingMessage = true
+                            var messageText = messageInput.text
+                            messageInput.text = ""
+                            slackAPI.sendMessage(channelId, messageText)
+
+                            // Refresh messages after a short delay to show the new message
+                            refreshTimer.start()
+                        }
                     }
+                }
+
+                BusyIndicator {
+                    anchors.centerIn: parent
+                    size: BusyIndicatorSize.Small
+                    running: isSendingMessage
+                    visible: isSendingMessage
                 }
             }
         }
@@ -216,12 +241,31 @@ Page {
         }
     }
 
+    // Timer to refresh messages after sending
+    Timer {
+        id: refreshTimer
+        interval: 1000  // 1 second delay
+        repeat: false
+        onTriggered: {
+            refreshMessages()
+            isSendingMessage = false
+        }
+    }
+
     Connections {
         target: slackAPI
 
         onMessageReceived: {
             if (message.channel === channelId) {
                 messageModel.addMessage(message)
+            }
+        }
+
+        // Handle API errors (like failed message send)
+        onApiError: {
+            if (isSendingMessage) {
+                isSendingMessage = false
+                refreshTimer.stop()
             }
         }
     }

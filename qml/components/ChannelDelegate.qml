@@ -24,12 +24,37 @@ ListItem {
             anchors.verticalCenter: parent.verticalCenter
             spacing: Theme.paddingSmall
 
-            Label {
+            Row {
                 width: parent.width
-                text: "#" + model.name
-                font.bold: model.unreadCount > 0
-                truncationMode: TruncationMode.Fade
-                color: channelItem.highlighted ? Theme.highlightColor : Theme.primaryColor
+                spacing: Theme.paddingSmall
+
+                // Icon based on type
+                Label {
+                    text: model.type === "im" ? "💬" :
+                          model.type === "mpim" ? "👥" :
+                          model.isPrivate ? "🔒" : "#"
+                    font.pixelSize: Theme.fontSizeSmall
+                    color: channelItem.highlighted ? Theme.highlightColor : Theme.primaryColor
+                }
+
+                Label {
+                    width: parent.width - parent.spacing * 2
+                    text: {
+                        if (model.type === "im" && model.userId) {
+                            // For DMs, show user's real name
+                            return userModel.getUserName(model.userId)
+                        } else if (model.type === "mpim") {
+                            // For multi-person DMs, show name without #
+                            return model.name
+                        } else {
+                            // For channels, show name (without # since we have icon)
+                            return model.name
+                        }
+                    }
+                    font.bold: model.unreadCount > 0
+                    truncationMode: TruncationMode.Fade
+                    color: channelItem.highlighted ? Theme.highlightColor : Theme.primaryColor
+                }
             }
 
             Label {

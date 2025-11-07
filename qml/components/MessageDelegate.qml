@@ -89,7 +89,29 @@ ListItem {
                 }
 
                 Label {
-                    text: Qt.formatDateTime(new Date(parseFloat(model.timestamp) * 1000), "hh:mm")
+                    text: {
+                        var msgDate = new Date(parseFloat(model.timestamp) * 1000)
+                        var today = new Date()
+                        var yesterday = new Date(today)
+                        yesterday.setDate(yesterday.getDate() - 1)
+
+                        // Check if message is from today
+                        if (msgDate.toDateString() === today.toDateString()) {
+                            return Qt.formatDateTime(msgDate, "hh:mm")
+                        }
+                        // Check if message is from yesterday
+                        else if (msgDate.toDateString() === yesterday.toDateString()) {
+                            return qsTr("Yesterday") + " " + Qt.formatDateTime(msgDate, "hh:mm")
+                        }
+                        // Check if message is from this year
+                        else if (msgDate.getFullYear() === today.getFullYear()) {
+                            return Qt.formatDateTime(msgDate, "MMM dd, hh:mm")
+                        }
+                        // Message is from a previous year
+                        else {
+                            return Qt.formatDateTime(msgDate, "MMM dd yyyy, hh:mm")
+                        }
+                    }
                     font.pixelSize: Theme.fontSizeExtraSmall
                     color: Theme.secondaryColor
                 }
@@ -109,6 +131,73 @@ ListItem {
                 font.pixelSize: Theme.fontSizeSmall
                 color: Theme.primaryColor
                 textFormat: Text.PlainText
+            }
+
+            // Reactions (emojis)
+            Flow {
+                width: parent.width
+                spacing: Theme.paddingSmall
+                visible: {
+                    try {
+                        var reactions = model.reactions
+                        if (typeof reactions === 'string') {
+                            reactions = JSON.parse(reactions)
+                        }
+                        return reactions && reactions.length > 0
+                    } catch (e) {
+                        return false
+                    }
+                }
+
+                Repeater {
+                    model: {
+                        try {
+                            var reactions = messageItem.model.reactions
+                            if (typeof reactions === 'string') {
+                                return JSON.parse(reactions)
+                            }
+                            return reactions || []
+                        } catch (e) {
+                            return []
+                        }
+                    }
+
+                    delegate: BackgroundItem {
+                        width: reactionRow.width + Theme.paddingMedium * 2
+                        height: Theme.itemSizeExtraSmall
+
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: Theme.paddingSmall
+                            color: Theme.rgba(Theme.highlightBackgroundColor, 0.2)
+                            border.color: Theme.rgba(Theme.highlightColor, 0.3)
+                            border.width: 1
+                        }
+
+                        Row {
+                            id: reactionRow
+                            anchors.centerIn: parent
+                            spacing: Theme.paddingSmall
+
+                            Label {
+                                text: ":" + modelData.name + ":"
+                                font.pixelSize: Theme.fontSizeExtraSmall
+                                color: Theme.primaryColor
+                            }
+
+                            Label {
+                                text: modelData.count || 1
+                                font.pixelSize: Theme.fontSizeExtraSmall
+                                font.bold: true
+                                color: Theme.highlightColor
+                            }
+                        }
+
+                        onClicked: {
+                            // TODO: Toggle reaction
+                        }
+                    }
+                }
             }
 
             // Image attachments

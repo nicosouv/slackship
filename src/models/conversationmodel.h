@@ -20,7 +20,8 @@ public:
         LastMessageRole,
         LastMessageTimeRole,
         TopicRole,
-        PurposeRole
+        PurposeRole,
+        UserIdRole  // For DMs - the user ID of the other person
     };
 
     explicit ConversationModel(QObject *parent = nullptr);
@@ -47,6 +48,7 @@ private:
         qint64 lastMessageTime;
         QString topic;
         QString purpose;
+        QString userId;  // For DMs - the other user's ID
     };
 
     QList<Conversation> m_conversations;
