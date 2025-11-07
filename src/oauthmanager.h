@@ -11,12 +11,16 @@ class OAuthManager : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool isAuthenticating READ isAuthenticating NOTIFY authenticatingChanged)
+    Q_PROPERTY(QString clientId READ clientId CONSTANT)
+    Q_PROPERTY(QString clientSecret READ clientSecret CONSTANT)
 
 public:
     explicit OAuthManager(QObject *parent = nullptr);
     ~OAuthManager();
 
     bool isAuthenticating() const { return m_isAuthenticating; }
+    QString clientId() const { return CLIENT_ID; }
+    QString clientSecret() const { return CLIENT_SECRET; }
 
     // Slack OAuth configuration
     static const QString CLIENT_ID;

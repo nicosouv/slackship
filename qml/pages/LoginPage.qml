@@ -1,8 +1,52 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import Amber.Web.Authorization 1.0
 
 Page {
     id: loginPage
+
+    // Amber Web Authorization OAuth2 component for Slack
+    OAuth2Ac {
+        id: slackOAuth
+
+        // Read client credentials from compiled defines
+        clientId: oauthManager.clientId
+        clientSecret: oauthManager.clientSecret
+
+        // Slack OAuth2 endpoints
+        authorizationEndpoint: "https://slack.com/oauth/v2/authorize"
+        tokenEndpoint: "https://slack.com/api/oauth.v2.access"
+
+        // Scopes for user token
+        scopes: ["channels:read", "channels:history", "chat:write", "users:read", "im:read", "im:history", "groups:read", "groups:history"]
+
+        // Redirect listener port (Amber creates local server)
+        redirectListener.port: 8080
+
+        onErrorOccurred: {
+            console.error("OAuth error:", code, message)
+            var banner = Notices.show(qsTr("Authentication failed: %1").arg(message), Notice.Long)
+        }
+
+        onReceivedAuthorizationCode: {
+            console.log("Authorization code received")
+        }
+
+        onReceivedAccessToken: {
+            console.log("OAuth authentication succeeded!")
+            console.log("Access token received")
+
+            // Store token
+            fileManager.setToken(accessToken)
+            slackAPI.authenticate(accessToken)
+
+            // For now we don't have full team info from OAuth2Ac response
+            // The app will fetch this after authentication
+
+            // Navigate to main view
+            pageStack.replace(Qt.resolvedUrl("ConversationListPage.qml"))
+        }
+    }
 
     SilicaFlickable {
         anchors.fill: parent
@@ -34,38 +78,17 @@ Page {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: qsTr("Login with Slack")
                 preferredWidth: Theme.buttonWidthLarge
-                enabled: !oauthManager.isAuthenticating
 
                 onClicked: {
-                    // Start WebView authentication (starts HTTP server + returns OAuth URL)
-                    var authUrl = oauthManager.startWebViewAuthentication()
-
-                    if (!authUrl) {
-                        console.error("Failed to start WebView authentication")
-                        return
-                    }
-
-                    // Push WebView page
-                    var webViewPage = pageStack.push(Qt.resolvedUrl("OAuthWebViewPage.qml"), {
-                        authUrl: authUrl
-                    })
-
-                    // Connect signals
-                    webViewPage.authCodeReceived.connect(function(code, state) {
-                        console.log("Authorization code received from WebView")
-                        oauthManager.handleWebViewCallback(code, state)
-                    })
-
-                    webViewPage.authError.connect(function(error) {
-                        console.error("WebView error:", error)
-                        oauthManager.cancelAuthentication()
-                    })
+                    // Use Amber Web Authorization to handle OAuth2 flow
+                    // This will open the system browser and handle the redirect
+                    slackOAuth.authorizeInBrowser()
                 }
             }
 
             Label {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: qsTr("Opens in-app browser for secure authentication")
+                text: qsTr("Opens system browser for secure authentication")
                 font.pixelSize: Theme.fontSizeExtraSmall
                 color: Theme.secondaryColor
             }
@@ -177,7 +200,7 @@ Page {
 
             Label {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: "Lagoon v0.2.12"
+                text: "Lagoon v0.3.0"
                 font.pixelSize: Theme.fontSizeExtraSmall
                 color: Theme.secondaryColor
                 opacity: 0.6
@@ -185,36 +208,4 @@ Page {
         }
     }
 
-    BusyIndicator {
-        anchors.centerIn: parent
-        size: BusyIndicatorSize.Large
-        running: oauthManager.isAuthenticating
-    }
-
-    // OAuth connections
-    Connections {
-        target: oauthManager
-
-        onAuthenticationSucceeded: {
-            console.log("OAuth authentication succeeded!")
-            console.log("Team:", teamName, "User:", userId)
-
-            // Authenticate with Slack API using the access token
-            slackAPI.authenticate(accessToken)
-            fileManager.setToken(accessToken)
-
-            // Add workspace
-            workspaceManager.addWorkspace(teamName, accessToken, teamId, userId, teamName + ".slack.com")
-
-            // Navigate back
-            pageStack.pop()
-        }
-
-        onAuthenticationFailed: {
-            console.error("OAuth authentication failed:", error)
-
-            // Show error banner
-            var banner = Notices.show(qsTr("Authentication failed: %1").arg(error), Notice.Long)
-        }
-    }
 }

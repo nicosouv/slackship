@@ -55,7 +55,6 @@ DISTFILES += \
     qml/pages/ConversationPage.qml \
     qml/pages/SettingsPage.qml \
     qml/pages/LoginPage.qml \
-    qml/pages/OAuthWebViewPage.qml \
     qml/components/MessageDelegate.qml \
     qml/components/ChannelDelegate.qml \
     qml/components/ReactionBubble.qml \
