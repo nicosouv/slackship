@@ -27,6 +27,7 @@ credentials.conf
 *.swp
 *.swo
 *~
+.claude
 
 # OS files
 .DS_Store

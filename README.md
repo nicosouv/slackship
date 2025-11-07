@@ -86,12 +86,12 @@ qmake
 make
 
 # Or build RPM package with mb2
-mb2 -t SailfishOS-5.1.0.11-armv7hl build
+mb2 -t SailfishOS-5.0.0.43-armv7hl build
 
 # Or use Docker
 docker run --rm -v $(pwd):/home/mersdk/src:z \
-  coderus/sailfishos-platform-sdk:5.1.0.11 \
-  bash -c "cd /home/mersdk/src && mb2 -t SailfishOS-5.1.0.11-armv7hl build"
+  coderus/sailfishos-platform-sdk:5.0.0.43 \
+  bash -c "cd /home/mersdk/src && mb2 -t SailfishOS-5.0.0.43-armv7hl build"
 ```
 
 ## Installation
