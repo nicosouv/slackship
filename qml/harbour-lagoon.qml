@@ -42,6 +42,9 @@ ApplicationWindow {
 
         onAuthenticationChanged: {
             if (slackAPI.isAuthenticated) {
+                console.log("=== AUTHENTICATION SUCCESS ===")
+                console.log("Saving workspace with token length:", slackAPI.token.length)
+
                 slackAPI.fetchConversations()
                 slackAPI.fetchUsers()
                 slackAPI.connectWebSocket()
@@ -49,11 +52,13 @@ ApplicationWindow {
                 // Save workspace info after successful authentication
                 workspaceManager.addWorkspace(
                     slackAPI.workspaceName,
-                    workspaceManager.currentWorkspaceToken || "",
+                    slackAPI.token,  // Use the actual token from SlackAPI!
                     slackAPI.workspaceName, // teamId - to be improved with real team ID
                     slackAPI.currentUserId,
                     slackAPI.workspaceName + ".slack.com"
                 )
+
+                console.log("Workspace saved successfully")
             } else {
                 pageStack.replace(Qt.resolvedUrl("pages/LoginPage.qml"))
             }

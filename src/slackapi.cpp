@@ -28,6 +28,7 @@ SlackAPI::~SlackAPI()
 void SlackAPI::authenticate(const QString &token)
 {
     m_token = token;
+    emit tokenChanged();
 
     qDebug() << "=== AUTHENTICATE CALLED ===";
     qDebug() << "Token length:" << m_token.length();
@@ -51,6 +52,7 @@ void SlackAPI::logout()
 
     disconnectWebSocket();
 
+    emit tokenChanged();
     emit authenticationChanged();
 }
 

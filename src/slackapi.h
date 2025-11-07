@@ -15,6 +15,7 @@ class SlackAPI : public QObject
     Q_PROPERTY(bool isAuthenticated READ isAuthenticated NOTIFY authenticationChanged)
     Q_PROPERTY(QString workspaceName READ workspaceName NOTIFY workspaceChanged)
     Q_PROPERTY(QString currentUserId READ currentUserId NOTIFY currentUserChanged)
+    Q_PROPERTY(QString token READ token NOTIFY tokenChanged)
 
 public:
     explicit SlackAPI(QObject *parent = nullptr);
@@ -23,6 +24,7 @@ public:
     bool isAuthenticated() const { return m_isAuthenticated; }
     QString workspaceName() const { return m_workspaceName; }
     QString currentUserId() const { return m_currentUserId; }
+    QString token() const { return m_token; }
 
 public slots:
     // Authentication
@@ -58,6 +60,7 @@ signals:
     void authenticationError(const QString &error);
     void workspaceChanged();
     void currentUserChanged();
+    void tokenChanged();
 
     // Data signals
     void conversationsReceived(const QJsonArray &conversations);
