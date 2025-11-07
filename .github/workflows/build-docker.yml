@@ -42,12 +42,14 @@ jobs:
         run: |
           sed -i "s/^Version:.*/Version:    ${{ steps.version.outputs.version }}/" rpm/harbour-lagoon.spec
 
+      - name: Inject OAuth credentials into qmake.conf
+        run: |
+          sed -i "s/lagoon_client_id = .*/lagoon_client_id = ${{ secrets.LAGOON_CLIENT_ID }}/" .qmake.conf
+          sed -i "s/lagoon_client_secret = .*/lagoon_client_secret = ${{ secrets.LAGOON_CLIENT_SECRET }}/" .qmake.conf
+
       - name: Build RPM for Sailfish OS
         id: build
         uses: R1tschY/sailfish-build-rpm@v1
-        env:
-          LAGOON_CLIENT_ID: ${{ secrets.LAGOON_CLIENT_ID }}
-          LAGOON_CLIENT_SECRET: ${{ secrets.LAGOON_CLIENT_SECRET }}
         with:
           arch: ${{ matrix.arch }}
           release: ${{ env.SAILFISH_RELEASE }}
