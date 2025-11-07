@@ -58,8 +58,8 @@ DISTFILES += \
 
 SAILFISHAPP_ICONS = 86x86 108x108 128x128 172x172
 
-CONFIG += sailfishapp_i18n
-
-TRANSLATIONS += \
-    translations/harbour-slackship-en.ts \
-    translations/harbour-slackship-fr.ts
+# Translations disabled for now - files don't exist yet
+# CONFIG += sailfishapp_i18n
+# TRANSLATIONS += \
+#     translations/harbour-slackship-en.ts \
+#     translations/harbour-slackship-fr.ts
