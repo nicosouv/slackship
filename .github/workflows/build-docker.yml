@@ -1,4 +1,4 @@
-name: Build with Docker
+name: Build and Release
 
 on:
   push:
@@ -7,11 +7,11 @@ on:
   workflow_dispatch:
 
 env:
-  DOCKER_IMAGE: 'coderus/sailfishos-platform-sdk:latest'
+  SAILFISH_RELEASE: '5.0.0.43'
 
 jobs:
-  build-docker:
-    name: Build RPM with Docker
+  build:
+    name: Build RPM for ${{ matrix.arch }}
     runs-on: ubuntu-latest
 
     strategy:
@@ -43,48 +43,34 @@ jobs:
           sed -i "s/^Version:.*/Version:    ${{ steps.version.outputs.version }}/" rpm/harbour-slackship.spec
           sed -i "s/^Version:.*/Version: ${{ steps.version.outputs.version }}/" rpm/harbour-slackship.yaml
 
-      - name: Pull Sailfish SDK Docker image
-        run: |
-          docker pull ${{ env.DOCKER_IMAGE }}
-
-      - name: Prepare build environment
-        run: |
-          mkdir -p build-output
-          chmod 777 build-output
-
-      - name: Build RPM in Docker
+      - name: Build RPM for Sailfish OS
+        id: build
+        uses: R1tschY/sailfish-build-rpm@v1
         env:
           SLACKSHIP_CLIENT_ID: ${{ secrets.SLACKSHIP_CLIENT_ID }}
           SLACKSHIP_CLIENT_SECRET: ${{ secrets.SLACKSHIP_CLIENT_SECRET }}
-        run: |
-          docker run --rm \
-            -v $(pwd):/home/mersdk/src:z \
-            -v $(pwd)/build-output:/home/mersdk/output:z \
-            -e SLACKSHIP_CLIENT_ID="${SLACKSHIP_CLIENT_ID}" \
-            -e SLACKSHIP_CLIENT_SECRET="${SLACKSHIP_CLIENT_SECRET}" \
-            ${{ env.DOCKER_IMAGE }} \
-            bash -c "
-              cd /home/mersdk/src && \
-              mb2 -t SailfishOS-latest-${{ matrix.arch }} build && \
-              find RPMS -name '*.rpm' -not -name '*debuginfo*' -not -name '*debugsource*' -exec cp {} /home/mersdk/output/ \;
-            "
+        with:
+          arch: ${{ matrix.arch }}
+          release: ${{ env.SAILFISH_RELEASE }}
+          fix-version: false
+          check: true
 
       - name: List built packages
         run: |
-          ls -lh build-output/
+          ls -lh RPMS/
           echo "Built packages:"
-          find build-output -name "*.rpm" -type f
+          find RPMS -name "*.rpm" -type f
 
       - name: Upload RPM artifacts
         uses: actions/upload-artifact@v4
         with:
           name: rpm-${{ matrix.arch }}
-          path: build-output/*.rpm
+          path: RPMS/*.rpm
           if-no-files-found: error
 
   create-release:
     name: Create Release
-    needs: build-docker
+    needs: build
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
     permissions:
@@ -108,7 +94,7 @@ jobs:
       - name: Organize packages
         run: |
           mkdir -p packages
-          find release-packages -name "*.rpm" -exec cp {} packages/ \;
+          find release-packages -name "*.rpm" -not -name "*debuginfo*" -not -name "*debugsource*" -exec cp {} packages/ \;
           ls -lh packages/
 
       - name: Generate changelog
@@ -138,18 +124,21 @@ jobs:
 
           ### Features
 
-          - Real-time messaging
+          - Real-time messaging with OAuth 2.0 authentication
+          - Multi-workspace support
           - Channels and DMs
-          - Message threads
-          - Reactions
-          - File sharing
+          - Message threads and reactions
+          - File and image sharing
+          - Background daemon for 24/7 notifications
           - Native Sailfish UI
 
           ### Getting Started
 
-          1. Create a Slack app at https://api.slack.com/apps
-          2. Generate an OAuth token with required scopes
-          3. Launch SlackShip and enter your token
+          1. Install SlackShip
+          2. Launch the app
+          3. Click "Login with Slack"
+          4. Authorize in your browser
+          5. Start messaging!
 
           ### Support
 
