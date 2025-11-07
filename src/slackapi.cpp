@@ -29,12 +29,16 @@ void SlackAPI::authenticate(const QString &token)
 {
     m_token = token;
 
+    qDebug() << "=== AUTHENTICATE CALLED ===";
+    qDebug() << "Token length:" << m_token.length();
+
     // Test authentication with auth.test endpoint
     QUrl url(API_BASE_URL + "auth.test");
     QNetworkRequest request(url);
     request.setRawHeader("Authorization", QString("Bearer %1").arg(m_token).toUtf8());
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 
+    qDebug() << "Sending auth.test request to:" << url.toString();
     m_networkManager->get(request);
 }
 
@@ -165,30 +169,42 @@ void SlackAPI::handleNetworkReply(QNetworkReply *reply)
 {
     reply->deleteLater();
 
+    qDebug() << "=== NETWORK REPLY RECEIVED ===";
+    qDebug() << "URL:" << reply->url().toString();
+    qDebug() << "Error:" << reply->error();
+
     if (reply->error() != QNetworkReply::NoError) {
+        qDebug() << "Network error:" << reply->errorString();
         emit networkError(reply->errorString());
         return;
     }
 
     QByteArray data = reply->readAll();
+    qDebug() << "Response data:" << data;
+
     QJsonDocument doc = QJsonDocument::fromJson(data);
 
     if (!doc.isObject()) {
+        qDebug() << "Response is not a JSON object";
         emit apiError("Invalid response from Slack API");
         return;
     }
 
     QJsonObject response = doc.object();
+    qDebug() << "Response 'ok' field:" << response["ok"].toBool();
 
     if (!response["ok"].toBool()) {
         QString error = response["error"].toString();
+        qDebug() << "API error:" << error;
         emit apiError(error);
         return;
     }
 
     // Extract endpoint from reply URL
     QString endpoint = reply->url().path();
+    qDebug() << "Full path:" << endpoint;
     endpoint.remove("/api/");
+    qDebug() << "Extracted endpoint:" << endpoint;
 
     processApiResponse(endpoint, response);
 }
@@ -245,10 +261,21 @@ void SlackAPI::makeApiRequest(const QString &endpoint, const QJsonObject &params
 
 void SlackAPI::processApiResponse(const QString &endpoint, const QJsonObject &response)
 {
+    qDebug() << "=== PROCESS API RESPONSE ===";
+    qDebug() << "Endpoint:" << endpoint;
+    qDebug() << "Checking if endpoint == 'auth.test':" << (endpoint == "auth.test");
+
     if (endpoint == "auth.test") {
+        qDebug() << "AUTH.TEST response received!";
+        qDebug() << "user_id:" << response["user_id"].toString();
+        qDebug() << "team:" << response["team"].toString();
+
         m_isAuthenticated = true;
         m_currentUserId = response["user_id"].toString();
         m_workspaceName = response["team"].toString();
+
+        qDebug() << "Setting m_isAuthenticated to true";
+        qDebug() << "Emitting authenticationChanged signal";
 
         emit authenticationChanged();
         emit workspaceChanged();
