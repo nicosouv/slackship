@@ -56,7 +56,7 @@ private slots:
 
 private:
     void openAuthorizationUrl();
-    void startLocalServer();
+    bool startLocalServer();
     void stopLocalServer();
     QString generateRandomState();
     void sendResponseToClient(QTcpSocket *socket, const QString &message);
