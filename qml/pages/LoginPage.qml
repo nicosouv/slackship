@@ -23,6 +23,11 @@ Page {
         // Redirect listener port (Amber creates local server)
         redirectListener.port: 8080
 
+        // Override redirect URI to use redirectmeto.com proxy
+        // This allows HTTPS redirect URL while still redirecting to local HTTP server
+        // Note: Amber's redirect listener accepts any path, so we can use /callback
+        redirectUri: "https://redirectmeto.com/http://127.0.0.1:8080/callback"
+
         Component.onCompleted: {
             console.log("=== OAUTH2 DEBUG ===")
             console.log("Client ID:", clientId)
@@ -31,7 +36,7 @@ Page {
             console.log("Token Endpoint:", tokenEndpoint)
             console.log("Scopes:", scopes)
             console.log("Redirect Port:", redirectListener.port)
-            console.log("Redirect URI will be: http://127.0.0.1:" + redirectListener.port)
+            console.log("Redirect URI:", redirectUri)
             console.log("===================")
         }
 
@@ -100,9 +105,15 @@ Page {
                 preferredWidth: Theme.buttonWidthLarge
 
                 onClicked: {
+                    console.log("=== STARTING OAUTH FLOW ===")
+                    console.log("About to call authorizeInBrowser()")
+
                     // Use Amber Web Authorization to handle OAuth2 flow
                     // This will open the system browser and handle the redirect
                     slackOAuth.authorizeInBrowser()
+
+                    console.log("authorizeInBrowser() called")
+                    console.log("===========================")
                 }
             }
 
