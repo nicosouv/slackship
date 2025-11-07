@@ -48,8 +48,15 @@ Page {
 
         delegate: ChannelDelegate {
             onClicked: {
-                messageModel.setCurrentChannelId(model.id)
+                console.log("Channel clicked:", model.name, model.id)
+
+                // Set current channel ID (property assignment, not function call)
+                messageModel.currentChannelId = model.id
+
+                // Fetch messages for this channel
                 slackAPI.fetchConversationHistory(model.id)
+
+                // Navigate to conversation page
                 pageStack.push(Qt.resolvedUrl("ConversationPage.qml"), {
                     "channelId": model.id,
                     "channelName": model.name
