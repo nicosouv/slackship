@@ -37,13 +37,33 @@ Page {
                 enabled: !oauthManager.isAuthenticating
 
                 onClicked: {
-                    oauthManager.startAuthentication()
+                    // Mark as authenticating
+                    oauthManager.isAuthenticating = true
+
+                    // Get the OAuth URL
+                    var authUrl = oauthManager.getAuthorizationUrl()
+
+                    // Push WebView page
+                    var webViewPage = pageStack.push(Qt.resolvedUrl("OAuthWebViewPage.qml"), {
+                        authUrl: authUrl
+                    })
+
+                    // Connect signals
+                    webViewPage.authCodeReceived.connect(function(code, state) {
+                        console.log("Authorization code received from WebView")
+                        oauthManager.handleWebViewCallback(code, state)
+                    })
+
+                    webViewPage.authError.connect(function(error) {
+                        console.error("WebView error:", error)
+                        oauthManager.cancelAuthentication()
+                    })
                 }
             }
 
             Label {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: qsTr("Opens browser for secure authentication")
+                text: qsTr("Opens in-app browser for secure authentication")
                 font.pixelSize: Theme.fontSizeExtraSmall
                 color: Theme.secondaryColor
             }

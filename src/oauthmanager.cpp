@@ -11,8 +11,11 @@
 // Slack OAuth configuration
 // These are loaded from environment variables for security
 // Set SLACKSHIP_CLIENT_ID and SLACKSHIP_CLIENT_SECRET before building
-const QString OAuthManager::CLIENT_ID = QString::fromUtf8(qgetenv("SLACKSHIP_CLIENT_ID"));
-const QString OAuthManager::CLIENT_SECRET = QString::fromUtf8(qgetenv("SLACKSHIP_CLIENT_SECRET"));
+// For development/testing, you need to create your own Slack app at api.slack.com/apps
+const QString OAuthManager::CLIENT_ID = QString::fromUtf8(qgetenv("SLACKSHIP_CLIENT_ID").isEmpty() ?
+    "YOUR_CLIENT_ID_HERE" : qgetenv("SLACKSHIP_CLIENT_ID"));
+const QString OAuthManager::CLIENT_SECRET = QString::fromUtf8(qgetenv("SLACKSHIP_CLIENT_SECRET").isEmpty() ?
+    "YOUR_CLIENT_SECRET_HERE" : qgetenv("SLACKSHIP_CLIENT_SECRET"));
 const QString OAuthManager::REDIRECT_URI = "http://localhost:8080/callback";
 const QString OAuthManager::AUTHORIZATION_URL = "https://slack.com/oauth/v2/authorize";
 const QString OAuthManager::TOKEN_URL = "https://slack.com/api/oauth.v2.access";
@@ -344,4 +347,51 @@ void OAuthManager::sendResponseToClient(QTcpSocket *socket, const QString &messa
 
     socket->write(response.toUtf8());
     socket->flush();
+}
+
+QString OAuthManager::getAuthorizationUrl()
+{
+    // Generate state if not already set
+    if (m_state.isEmpty()) {
+        m_state = generateRandomState();
+    }
+
+    QUrl url(AUTHORIZATION_URL);
+    QUrlQuery query;
+
+    query.addQueryItem("client_id", CLIENT_ID);
+    query.addQueryItem("scope", SCOPES);
+    query.addQueryItem("redirect_uri", REDIRECT_URI);
+    query.addQueryItem("state", m_state);
+    query.addQueryItem("user_scope", SCOPES); // For user token
+
+    url.setQuery(query);
+
+    qDebug() << "Generated OAuth URL:" << url.toString();
+
+    return url.toString();
+}
+
+void OAuthManager::handleWebViewCallback(const QString &code, const QString &state)
+{
+    qDebug() << "WebView callback received with code and state";
+
+    // Verify state (CSRF protection)
+    if (state != m_state) {
+        qWarning() << "State mismatch! Possible CSRF attack.";
+        emit authenticationFailed("State mismatch");
+        m_isAuthenticating = false;
+        emit authenticatingChanged();
+        return;
+    }
+
+    if (code.isEmpty()) {
+        emit authenticationFailed("No authorization code");
+        m_isAuthenticating = false;
+        emit authenticatingChanged();
+        return;
+    }
+
+    // Exchange code for token
+    exchangeCodeForToken(code);
 }

@@ -33,6 +33,12 @@ public slots:
     // Cancel ongoing authentication
     void cancelAuthentication();
 
+    // Get OAuth URL for WebView
+    QString getAuthorizationUrl();
+
+    // Handle callback from WebView
+    void handleWebViewCallback(const QString &code, const QString &state);
+
     // Exchange authorization code for token
     void exchangeCodeForToken(const QString &code);
 
