@@ -20,10 +20,95 @@ Page {
             Label {
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: parent.width - Theme.horizontalPageMargin * 2
-                text: qsTr("To get started, you'll need a Slack OAuth token")
+                text: qsTr("Connect your Slack account")
                 wrapMode: Text.WordWrap
                 color: Theme.highlightColor
-                font.pixelSize: Theme.fontSizeMedium
+                font.pixelSize: Theme.fontSizeLarge
+                font.bold: true
+                horizontalAlignment: Text.AlignHCenter
+            }
+
+            // OAuth Login Button (Primary method)
+            Button {
+                id: oauthButton
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: qsTr("Login with Slack")
+                preferredWidth: Theme.buttonWidthLarge
+                enabled: !oauthManager.isAuthenticating
+
+                onClicked: {
+                    // Mark as authenticating
+                    oauthManager.isAuthenticating = true
+
+                    // Get the OAuth URL
+                    var authUrl = oauthManager.getAuthorizationUrl()
+
+                    // Push WebView page
+                    var webViewPage = pageStack.push(Qt.resolvedUrl("OAuthWebViewPage.qml"), {
+                        authUrl: authUrl
+                    })
+
+                    // Connect signals
+                    webViewPage.authCodeReceived.connect(function(code, state) {
+                        console.log("Authorization code received from WebView")
+                        oauthManager.handleWebViewCallback(code, state)
+                    })
+
+                    webViewPage.authError.connect(function(error) {
+                        console.error("WebView error:", error)
+                        oauthManager.cancelAuthentication()
+                    })
+                }
+            }
+
+            Label {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: qsTr("Opens in-app browser for secure authentication")
+                font.pixelSize: Theme.fontSizeExtraSmall
+                color: Theme.secondaryColor
+            }
+
+            // Separator
+            Item {
+                width: parent.width
+                height: Theme.paddingLarge * 2
+
+                Row {
+                    anchors.centerIn: parent
+                    spacing: Theme.paddingMedium
+                    width: parent.width * 0.8
+
+                    Rectangle {
+                        width: (parent.width - orLabel.width - Theme.paddingMedium * 2) / 2
+                        height: 1
+                        color: Theme.secondaryColor
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Label {
+                        id: orLabel
+                        text: qsTr("or")
+                        color: Theme.secondaryColor
+                        font.pixelSize: Theme.fontSizeSmall
+                    }
+
+                    Rectangle {
+                        width: (parent.width - orLabel.width - Theme.paddingMedium * 2) / 2
+                        height: 1
+                        color: Theme.secondaryColor
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                }
+            }
+
+            // Manual token entry (Advanced/Fallback)
+            Label {
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: parent.width - Theme.horizontalPageMargin * 2
+                text: qsTr("Advanced: Enter token manually")
+                wrapMode: Text.WordWrap
+                color: Theme.secondaryHighlightColor
+                font.pixelSize: Theme.fontSizeSmall
                 horizontalAlignment: Text.AlignHCenter
             }
 
@@ -31,8 +116,9 @@ Page {
                 id: tokenField
                 width: parent.width
                 placeholderText: qsTr("xoxp-...")
-                label: qsTr("User OAuth Token")
+                label: qsTr("Workspace token")
                 inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
+                visible: advancedExpander.expanded
 
                 EnterKey.iconSource: "image://theme/icon-m-enter-accept"
                 EnterKey.onClicked: loginButton.clicked()
@@ -41,9 +127,9 @@ Page {
             Button {
                 id: loginButton
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: qsTr("Connect")
-                preferredWidth: Theme.buttonWidthLarge
+                text: qsTr("Login with Token")
                 enabled: tokenField.text.length > 0
+                visible: advancedExpander.expanded
 
                 onClicked: {
                     if (tokenField.text.trim().length > 0) {
@@ -57,12 +143,17 @@ Page {
                 }
             }
 
+            ExpandingSection {
+                id: advancedExpander
+                anchors.horizontalCenter: parent.horizontalCenter
+                title: qsTr("Show advanced options")
+            }
+
             Label {
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: parent.width - Theme.horizontalPageMargin * 2
                 text: qsTr("How to get your token:")
-                font.pixelSize: Theme.fontSizeMedium
-                font.bold: true
+                font.pixelSize: Theme.fontSizeSmall
                 color: Theme.highlightColor
             }
 
@@ -70,16 +161,8 @@ Page {
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: parent.width - Theme.horizontalPageMargin * 2
                 text: qsTr("1. Go to api.slack.com/apps\n" +
-                          "2. Click 'Create New App'\n" +
-                          "3. Choose 'From scratch'\n" +
-                          "4. Name it 'SlackShip' and select your workspace\n" +
-                          "5. Go to 'OAuth & Permissions'\n" +
-                          "6. Add these User Token Scopes:\n" +
-                          "   • channels:*, groups:*, im:*, mpim:*\n" +
-                          "   • chat:write, users:read, reactions:*\n" +
-                          "   • files:*, search:read\n" +
-                          "7. Click 'Install to Workspace'\n" +
-                          "8. Copy the 'User OAuth Token' (starts with xoxp-)")
+                          "2. Create a new app\n" +
+                          "3. Get your OAuth token")
                 wrapMode: Text.WordWrap
                 font.pixelSize: Theme.fontSizeExtraSmall
                 color: Theme.secondaryColor
@@ -87,17 +170,36 @@ Page {
         }
     }
 
-    // Connection success handler
+    BusyIndicator {
+        anchors.centerIn: parent
+        size: BusyIndicatorSize.Large
+        running: oauthManager.isAuthenticating
+    }
+
+    // OAuth connections
     Connections {
-        target: slackAPI
+        target: oauthManager
 
         onAuthenticationSucceeded: {
-            console.log("Authentication succeeded!")
+            console.log("OAuth authentication succeeded!")
+            console.log("Team:", teamName, "User:", userId)
+
+            // Authenticate with Slack API using the access token
+            slackAPI.authenticate(accessToken)
+            fileManager.setToken(accessToken)
+
+            // Add workspace
+            workspaceManager.addWorkspace(teamName, accessToken, teamId, userId, teamName + ".slack.com")
+
+            // Navigate back
             pageStack.pop()
         }
 
         onAuthenticationFailed: {
-            console.error("Authentication failed:", errorMessage)
+            console.error("OAuth authentication failed:", error)
+
+            // Show error banner
+            var banner = Notices.show(qsTr("Authentication failed: %1").arg(error), Notice.Long)
         }
     }
 }
