@@ -24,14 +24,9 @@ const QString OAuthManager::CLIENT_SECRET = QStringLiteral(LAGOON_CLIENT_SECRET)
 const QString OAuthManager::CLIENT_SECRET = QStringLiteral("YOUR_CLIENT_SECRET_HERE");
 #endif
 const QString OAuthManager::REDIRECT_URI = "http://localhost:8080/callback";
-const QString OAuthManager::AUTHORIZATION_URL = "https://slack.com/oauth/v2/authorize";
-const QString OAuthManager::TOKEN_URL = "https://slack.com/api/oauth.v2.access";
-const QString OAuthManager::SCOPES = "channels:history,channels:read,channels:write,"
-                                     "chat:write,groups:history,groups:read,"
-                                     "im:history,im:read,im:write,"
-                                     "mpim:history,mpim:read,"
-                                     "users:read,reactions:read,reactions:write,"
-                                     "files:read,files:write,search:read";
+const QString OAuthManager::AUTHORIZATION_URL = "https://slack.com/oauth/authorize";
+const QString OAuthManager::TOKEN_URL = "https://slack.com/api/oauth.access";
+const QString OAuthManager::SCOPES = "client";
 
 OAuthManager::OAuthManager(QObject *parent)
     : QObject(parent)
