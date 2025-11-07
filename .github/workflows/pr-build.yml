@@ -8,6 +8,9 @@ on:
     branches:
       - main
 
+env:
+  SAILFISH_RELEASE: '4.5.0.18'
+
 jobs:
   build-check:
     name: Build Check - ${{ matrix.arch }}
@@ -23,19 +26,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Pull Sailfish SDK Docker image
-        run: |
-          docker pull coderus/sailfishos-platform-sdk:4.5.0.18
-
-      - name: Build check
-        run: |
-          docker run --rm \
-            -v $(pwd):/home/mersdk/src:z \
-            coderus/sailfishos-platform-sdk:4.5.0.18 \
-            bash -c "
-              cd /home/mersdk/src && \
-              mb2 -t SailfishOS-4.5.0.18-${{ matrix.arch }} build
-            "
+      - name: Build RPM for Sailfish OS
+        uses: R1tschY/sailfish-build-rpm@v1
+        env:
+          LAGOON_CLIENT_ID: ${{ secrets.LAGOON_CLIENT_ID }}
+          LAGOON_CLIENT_SECRET: ${{ secrets.LAGOON_CLIENT_SECRET }}
+        with:
+          arch: ${{ matrix.arch }}
+          release: ${{ env.SAILFISH_RELEASE }}
+          fix-version: false
+          check: true
 
       - name: Check for RPM
         run: |
