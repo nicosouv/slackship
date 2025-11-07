@@ -107,7 +107,7 @@ void NotificationManager::showNotification(const QString &summary,
     notification->setProperty("channelId", channelId);
 
     // Set icon
-    notification->setAppIcon("harbour-slackship");
+    notification->setAppIcon("harbour-lagoon");
 
     // Set urgency (higher for mentions)
     if (isMention) {

@@ -2,7 +2,7 @@
 
 AppSettings::AppSettings(QObject *parent)
     : QObject(parent)
-    , m_settings("harbour-slackship", "slackship")
+    , m_settings("harbour-lagoon", "lagoon")
 {
 }
 

@@ -81,7 +81,7 @@ void DBusClient::startDaemon()
     qDebug() << "Starting daemon via systemd...";
 
     QProcess process;
-    process.start("systemctl", QStringList() << "--user" << "start" << "harbour-slackship-daemon.service");
+    process.start("systemctl", QStringList() << "--user" << "start" << "harbour-lagoon-daemon.service");
     process.waitForFinished();
 
     if (process.exitCode() == 0) {

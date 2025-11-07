@@ -14,18 +14,27 @@ ApplicationWindow {
     allowedOrientations: defaultAllowedOrientations
 
     Component.onCompleted: {
+        console.log("=== APP STARTUP ===")
+        console.log("Workspace count:", workspaceManager.workspaceCount())
+
         // Check if we have saved workspaces
         if (workspaceManager.workspaceCount() > 0) {
             var token = workspaceManager.currentWorkspaceToken
+            console.log("Found saved workspace, auto-login with token:", token ? (token.substring(0, 10) + "...") : "null")
+
             if (token && token.length > 0) {
                 slackAPI.authenticate(token)
                 fileManager.setToken(token)
+                console.log("Auto-login initiated")
             } else {
+                console.log("No valid token, showing login page")
                 pageStack.replace(Qt.resolvedUrl("pages/LoginPage.qml"))
             }
         } else {
+            console.log("No saved workspaces, showing login page")
             pageStack.replace(Qt.resolvedUrl("pages/LoginPage.qml"))
         }
+        console.log("===================")
     }
 
     Connections {

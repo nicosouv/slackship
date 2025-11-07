@@ -178,7 +178,7 @@ void WorkspaceManager::switchWorkspace(int index)
 
 void WorkspaceManager::loadWorkspaces()
 {
-    QSettings settings("harbour-slackship", "workspaces");
+    QSettings settings("harbour-lagoon", "workspaces");
     int count = settings.beginReadArray("workspaces");
 
     for (int i = 0; i < count; ++i) {
@@ -210,7 +210,7 @@ void WorkspaceManager::loadWorkspaces()
 
 void WorkspaceManager::saveWorkspaces()
 {
-    QSettings settings("harbour-slackship", "workspaces");
+    QSettings settings("harbour-lagoon", "workspaces");
     settings.beginWriteArray("workspaces");
 
     for (int i = 0; i < m_workspaces.count(); ++i) {
