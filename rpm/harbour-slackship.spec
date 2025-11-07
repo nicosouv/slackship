@@ -43,7 +43,7 @@ Features:
 %setup -q -n %{name}-%{version}
 
 %build
-%qmake5
+%qmake5 harbour-slackship.pro
 
 make %{?_smp_mflags}
 
