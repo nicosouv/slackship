@@ -3,7 +3,7 @@ TARGET = harbour-slackship
 CONFIG += sailfishapp
 QT += network websockets sql dbus
 CONFIG += link_pkgconfig
-PKGCONFIG += nemonotifications-qt5
+PKGCONFIG += sailfishapp nemonotifications-qt5
 
 SOURCES += \
     src/main.cpp \
