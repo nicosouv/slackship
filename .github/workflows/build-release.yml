@@ -37,19 +37,16 @@ jobs:
         run: |
           sed -i "s/^Version:.*/Version:    ${{ steps.version.outputs.version }}/" rpm/harbour-lagoon.spec
 
-      - name: Set up Sailfish SDK
+      - name: Pull Sailfish SDK Docker image
         run: |
-          # Download and install Sailfish SDK Platform SDK
-          curl -O https://releases.sailfishos.org/sdk/installers/latest/SailfishSDK-beta-linux64-online.run
-          chmod +x SailfishSDK-beta-linux64-online.run
-
-          # Install SDK in non-interactive mode
-          ./SailfishSDK-beta-linux64-online.run --accept-licenses --default-answer --confirm-command install
+          docker pull coderus/sailfishos-platform-sdk:${{ env.SAILFISH_VERSION }}
 
       - name: Build RPM package
         run: |
-          # Use mb2 (Mer Build tool) to build the RPM
-          mb2 -t SailfishOS-${{ env.SAILFISH_VERSION }}-${{ matrix.arch }} build
+          docker run --rm \
+            -v $(pwd):/home/mersdk/src:z \
+            coderus/sailfishos-platform-sdk:${{ env.SAILFISH_VERSION }} \
+            bash -c "cd /home/mersdk/src && mb2 -t SailfishOS-${{ env.SAILFISH_VERSION }}-${{ matrix.arch }} build"
         continue-on-error: false
 
       - name: Find RPM files
