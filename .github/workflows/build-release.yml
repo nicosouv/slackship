@@ -36,7 +36,6 @@ jobs:
       - name: Update version in spec file
         run: |
           sed -i "s/^Version:.*/Version:    ${{ steps.version.outputs.version }}/" rpm/harbour-slackship.spec
-          sed -i "s/^Version:.*/Version: ${{ steps.version.outputs.version }}/" rpm/harbour-slackship.yaml
 
       - name: Set up Sailfish SDK
         run: |
