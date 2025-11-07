@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 env:
-  SAILFISH_VERSION: '5.0.0.43'
+  DOCKER_IMAGE: 'coderus/sailfishos-platform-sdk:latest'
 
 jobs:
   build-docker:
@@ -45,7 +45,7 @@ jobs:
 
       - name: Pull Sailfish SDK Docker image
         run: |
-          docker pull coderus/sailfishos-platform-sdk:${{ env.SAILFISH_VERSION }}
+          docker pull ${{ env.DOCKER_IMAGE }}
 
       - name: Prepare build environment
         run: |
@@ -62,10 +62,10 @@ jobs:
             -v $(pwd)/build-output:/home/mersdk/output:z \
             -e SLACKSHIP_CLIENT_ID="${SLACKSHIP_CLIENT_ID}" \
             -e SLACKSHIP_CLIENT_SECRET="${SLACKSHIP_CLIENT_SECRET}" \
-            coderus/sailfishos-platform-sdk:${{ env.SAILFISH_VERSION }} \
+            ${{ env.DOCKER_IMAGE }} \
             bash -c "
               cd /home/mersdk/src && \
-              mb2 -t SailfishOS-${{ env.SAILFISH_VERSION }}-${{ matrix.arch }} build && \
+              mb2 -t SailfishOS-latest-${{ matrix.arch }} build && \
               find RPMS -name '*.rpm' -not -name '*debuginfo*' -not -name '*debugsource*' -exec cp {} /home/mersdk/output/ \;
             "
 
