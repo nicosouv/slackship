@@ -8,6 +8,7 @@
 #include <QJsonArray>
 #include <QTimer>
 #include <QHash>
+#include <QSettings>
 
 #include "websocketclient.h"
 
@@ -111,9 +112,12 @@ private slots:
     void handleRefreshTimer();
 
 private:
-    void makeApiRequest(const QString &endpoint, const QJsonObject &params = QJsonObject());
-    void processApiResponse(const QString &endpoint, const QJsonObject &response);
+    QNetworkReply* makeApiRequest(const QString &endpoint, const QJsonObject &params = QJsonObject());
+    void processApiResponse(const QString &endpoint, const QJsonObject &response, QNetworkReply *reply);
     void trackBandwidth(qint64 bytes);
+    void checkForNewMessages(const QString &channelId);
+    QString getLastSeenTimestamp(const QString &channelId) const;
+    void setLastSeenTimestamp(const QString &channelId, const QString &timestamp);
 
     QNetworkAccessManager *m_networkManager;
     WebSocketClient *m_webSocketClient;
@@ -129,6 +133,10 @@ private:
     bool m_autoRefresh;
     int m_refreshInterval;  // in seconds
     QHash<QString, int> m_lastUnreadCounts;  // channelId -> unread count
+
+    // Timestamp tracking for new message detection (more sustainable approach)
+    QSettings m_timestampSettings;  // Persistent storage of last seen timestamps
+    QHash<QString, QString> m_lastSeenTimestamps;  // channelId -> last message timestamp (in-memory cache)
 
     // Bandwidth tracking
     qint64 m_sessionBandwidthBytes;  // Bytes used in current session

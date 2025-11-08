@@ -14,6 +14,7 @@ SlackAPI::SlackAPI(QObject *parent)
     , m_refreshTimer(new QTimer(this))
     , m_autoRefresh(true)
     , m_refreshInterval(30)  // 30 seconds by default
+    , m_timestampSettings("harbour-lagoon", "message-timestamps")  // Initialize persistent storage
     , m_sessionBandwidthBytes(0)  // Initialize session bandwidth
 {
     connect(m_networkManager, &QNetworkAccessManager::finished,
@@ -28,6 +29,13 @@ SlackAPI::SlackAPI(QObject *parent)
     m_refreshTimer->setInterval(m_refreshInterval * 1000);
     connect(m_refreshTimer, &QTimer::timeout,
             this, &SlackAPI::handleRefreshTimer);
+
+    // Load persisted timestamps into memory cache
+    QStringList keys = m_timestampSettings.allKeys();
+    for (const QString &key : keys) {
+        m_lastSeenTimestamps[key] = m_timestampSettings.value(key).toString();
+    }
+    qDebug() << "Loaded" << m_lastSeenTimestamps.size() << "persisted message timestamps";
 }
 
 SlackAPI::~SlackAPI()
@@ -255,7 +263,7 @@ void SlackAPI::handleNetworkReply(QNetworkReply *reply)
     endpoint.remove("/api/");
     qDebug() << "Extracted endpoint:" << endpoint;
 
-    processApiResponse(endpoint, response);
+    processApiResponse(endpoint, response, reply);
 }
 
 void SlackAPI::handleWebSocketMessage(const QJsonObject &message)
@@ -283,11 +291,11 @@ void SlackAPI::handleWebSocketError(const QString &error)
     emit networkError(error);
 }
 
-void SlackAPI::makeApiRequest(const QString &endpoint, const QJsonObject &params)
+QNetworkReply* SlackAPI::makeApiRequest(const QString &endpoint, const QJsonObject &params)
 {
     if (m_token.isEmpty() && endpoint != "auth.test") {
         emit apiError("Not authenticated");
-        return;
+        return nullptr;
     }
 
     QUrl url(API_BASE_URL + endpoint);
@@ -300,12 +308,13 @@ void SlackAPI::makeApiRequest(const QString &endpoint, const QJsonObject &params
                        endpoint.startsWith("files.") ||
                        endpoint.startsWith("reactions.");
 
+    QNetworkReply *reply = nullptr;
     if (requiresPost) {
         // POST request with JSON body
         QJsonDocument doc(params);
         QByteArray jsonData = doc.toJson();
         qDebug() << "Sending POST request to" << endpoint << "with body:" << jsonData;
-        m_networkManager->post(request, jsonData);
+        reply = m_networkManager->post(request, jsonData);
     } else {
         // GET request with query parameters
         if (!params.isEmpty()) {
@@ -316,11 +325,13 @@ void SlackAPI::makeApiRequest(const QString &endpoint, const QJsonObject &params
             url.setQuery(query);
             request.setUrl(url);
         }
-        m_networkManager->get(request);
+        reply = m_networkManager->get(request);
     }
+
+    return reply;
 }
 
-void SlackAPI::processApiResponse(const QString &endpoint, const QJsonObject &response)
+void SlackAPI::processApiResponse(const QString &endpoint, const QJsonObject &response, QNetworkReply *reply)
 {
     qDebug() << "=== PROCESS API RESPONSE ===";
     qDebug() << "Endpoint:" << endpoint;
@@ -351,56 +362,21 @@ void SlackAPI::processApiResponse(const QString &endpoint, const QJsonObject &re
             qDebug() << "Auto-refresh started, polling every" << m_refreshInterval << "seconds";
         }
 
-        // After authentication, connect WebSocket
-        connectWebSocket();
+        // RTM WebSocket is deprecated - we use polling instead
+        // connectWebSocket();
 
     } else if (endpoint == "users.conversations" || endpoint == "conversations.list") {
         QJsonArray conversations = response["channels"].toArray();
 
-        // Detect new unread messages for notifications
+        // For each conversation, check for new messages by fetching the latest message
+        // and comparing timestamps (more sustainable approach)
         for (const QJsonValue &value : conversations) {
             if (value.isObject()) {
                 QJsonObject conv = value.toObject();
                 QString channelId = conv["id"].toString();
 
-                // For DMs/MPIMs: use unread_count_display if available
-                // For channels: calculate by comparing last_read with latest message
-                int unreadCount = 0;
-
-                if (conv.contains("unread_count_display")) {
-                    // DMs and group messages provide this
-                    unreadCount = conv["unread_count_display"].toInt();
-                } else if (conv.contains("last_read")) {
-                    // For channels, check if there are unread messages
-                    QString lastRead = conv["last_read"].toString();
-                    QJsonObject latest = conv["latest"].toObject();
-                    QString latestTs = latest["ts"].toString();
-
-                    // If latest message timestamp > last_read, there are unread messages
-                    if (!latestTs.isEmpty() && !lastRead.isEmpty()) {
-                        double lastReadDouble = lastRead.toDouble();
-                        double latestDouble = latestTs.toDouble();
-                        if (latestDouble > lastReadDouble) {
-                            unreadCount = 1;  // We don't know exact count, but we know there are unreads
-                        }
-                    }
-                } else {
-                    // Fallback to unread_count if present (though it's usually not for channels)
-                    unreadCount = conv["unread_count"].toInt();
-                }
-
-                // Check if this is a new unread message
-                if (unreadCount > 0 && m_lastUnreadCounts.contains(channelId)) {
-                    int lastCount = m_lastUnreadCounts.value(channelId);
-                    if (unreadCount > lastCount) {
-                        // New unread messages detected!
-                        qDebug() << "New unread messages in channel" << channelId << ":" << (unreadCount - lastCount);
-                        emit newUnreadMessages(channelId, unreadCount - lastCount);
-                    }
-                }
-
-                // Update stored unread count
-                m_lastUnreadCounts.insert(channelId, unreadCount);
+                // Check if this conversation has new messages
+                checkForNewMessages(channelId);
             }
         }
 
@@ -408,8 +384,38 @@ void SlackAPI::processApiResponse(const QString &endpoint, const QJsonObject &re
 
     } else if (endpoint == "conversations.history") {
         QJsonArray messages = response["messages"].toArray();
-        qDebug() << "CONVERSATIONS.HISTORY: Emitting messagesReceived signal with" << messages.count() << "messages";
-        emit messagesReceived(messages);
+
+        // Check if this is a request from checkForNewMessages (for notification detection)
+        QString checkingChannel = reply->property("checkingChannel").toString();
+        if (!checkingChannel.isEmpty() && messages.count() > 0) {
+            // This is a new message check for notifications
+            QJsonObject latestMessage = messages[0].toObject();
+            QString latestTs = latestMessage["ts"].toString();
+            QString lastSeenTs = getLastSeenTimestamp(checkingChannel);
+
+            qDebug() << "=== NEW MESSAGE CHECK ===" << checkingChannel;
+            qDebug() << "Latest message ts:" << latestTs;
+            qDebug() << "Last seen ts:" << lastSeenTs;
+
+            if (!latestTs.isEmpty()) {
+                double latestDouble = latestTs.toDouble();
+                double lastSeenDouble = lastSeenTs.toDouble();
+
+                if (latestDouble > lastSeenDouble) {
+                    // New message detected!
+                    qDebug() << "NEW MESSAGE DETECTED in" << checkingChannel;
+                    emit newUnreadMessages(checkingChannel, 1);
+                }
+
+                // Update the last seen timestamp
+                setLastSeenTimestamp(checkingChannel, latestTs);
+            }
+            qDebug() << "======================";
+        } else {
+            // Regular conversation history request (for UI)
+            qDebug() << "CONVERSATIONS.HISTORY: Emitting messagesReceived signal with" << messages.count() << "messages";
+            emit messagesReceived(messages);
+        }
 
     } else if (endpoint == "conversations.replies") {
         QJsonArray messages = response["messages"].toArray();
@@ -486,4 +492,36 @@ void SlackAPI::trackBandwidth(qint64 bytes)
 
     // Signal for total bandwidth update (connected to AppSettings in main.cpp)
     emit bandwidthBytesAdded(bytes);
+}
+
+QString SlackAPI::getLastSeenTimestamp(const QString &channelId) const
+{
+    return m_lastSeenTimestamps.value(channelId, "0");
+}
+
+void SlackAPI::setLastSeenTimestamp(const QString &channelId, const QString &timestamp)
+{
+    if (timestamp.isEmpty()) {
+        return;
+    }
+
+    // Update in-memory cache
+    m_lastSeenTimestamps[channelId] = timestamp;
+
+    // Persist to storage
+    m_timestampSettings.setValue(channelId, timestamp);
+}
+
+void SlackAPI::checkForNewMessages(const QString &channelId)
+{
+    // Fetch the latest message from this channel
+    QJsonObject params;
+    params["channel"] = channelId;
+    params["limit"] = 1;  // We only need the most recent message
+
+    QNetworkReply *reply = makeApiRequest("conversations.history", params);
+    if (reply) {
+        // Store the channel ID in the reply so we can identify it when the response comes back
+        reply->setProperty("checkingChannel", channelId);
+    }
 }
