@@ -80,6 +80,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history and tags for changelog generation
 
       - name: Extract version
         id: version
@@ -104,20 +106,38 @@ jobs:
           # Get the previous tag
           PREVIOUS_TAG=$(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1) 2>/dev/null || echo "")
 
+          echo "Current tag: ${{ github.ref }}"
+          echo "Previous tag: $PREVIOUS_TAG"
+
           # Generate changelog from commits
           if [ -z "$PREVIOUS_TAG" ]; then
             # First release - show all commits
-            COMMITS=$(git log --pretty=format:"- %s" --no-merges)
+            echo "Generating changelog from all commits..."
+            COMMITS=$(git log --pretty=format:"- %s (%h)" --no-merges)
           else
             # Show commits since previous tag
-            COMMITS=$(git log ${PREVIOUS_TAG}..HEAD --pretty=format:"- %s" --no-merges)
+            echo "Generating changelog from $PREVIOUS_TAG to HEAD..."
+            COMMITS=$(git log ${PREVIOUS_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
           fi
 
+          echo "Commits found:"
+          echo "$COMMITS"
+
           # Create release notes
-          cat > RELEASE_NOTES.md << EOF
+          cat > RELEASE_NOTES.md << 'EOFMARKER'
           ## What's New in v${{ steps.version.outputs.version }}
 
-          $COMMITS
+EOFMARKER
+
+          # Append commits
+          if [ -n "$COMMITS" ]; then
+            echo "$COMMITS" >> RELEASE_NOTES.md
+          else
+            echo "- No new commits found" >> RELEASE_NOTES.md
+          fi
+
+          # Append the rest
+          cat >> RELEASE_NOTES.md << 'EOFMARKER'
 
           ---
 
@@ -158,7 +178,7 @@ jobs:
           - 🐛 Report issues: https://github.com/${{ github.repository }}/issues
           - 📖 Documentation: https://github.com/${{ github.repository }}
 
-          EOF
+          EOFMARKER
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
