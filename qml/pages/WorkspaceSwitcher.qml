@@ -1,19 +1,16 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 
-Dialog {
+Page {
     id: workspaceSwitcherPage
-
-    canAccept: workspaceList.currentIndex >= 0
 
     SilicaListView {
         id: workspaceList
         anchors.fill: parent
         model: workspaceManager
 
-        header: DialogHeader {
+        header: PageHeader {
             title: qsTr("Switch Workspace")
-            acceptText: qsTr("Switch")
         }
 
         delegate: ListItem {
@@ -76,7 +73,9 @@ Dialog {
             }
 
             onClicked: {
-                workspaceList.currentIndex = model.index
+                console.log("Switching to workspace:", model.name, "index:", model.index)
+                workspaceManager.switchWorkspace(model.index)
+                pageStack.pop()
             }
 
             menu: ContextMenu {
@@ -102,11 +101,5 @@ Dialog {
         }
 
         VerticalScrollDecorator { }
-    }
-
-    onAccepted: {
-        if (workspaceList.currentIndex >= 0) {
-            workspaceManager.switchWorkspace(workspaceList.currentIndex)
-        }
     }
 }
