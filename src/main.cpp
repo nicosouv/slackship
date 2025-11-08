@@ -92,14 +92,28 @@ int main(int argc, char *argv[])
         }
     });
 
-    // Track messages when history is received
+    // Track messages when history is received (only recent messages to avoid performance issues)
     QObject::connect(slackAPI, &SlackAPI::messagesReceived,
                      [statsManager](const QJsonArray &messages) {
+        QDateTime thirtyDaysAgo = QDateTime::currentDateTime().addDays(-30);
+        int trackedCount = 0;
+
         for (const QJsonValue &value : messages) {
             if (value.isObject()) {
-                statsManager->trackMessage(value.toObject());
+                QJsonObject message = value.toObject();
+
+                // Only track messages from the last 30 days to avoid performance issues
+                double tsDouble = message["ts"].toString().toDouble();
+                QDateTime messageTime = QDateTime::fromMSecsSinceEpoch(static_cast<qint64>(tsDouble * 1000));
+
+                if (messageTime >= thirtyDaysAgo) {
+                    statsManager->trackMessage(message);
+                    trackedCount++;
+                }
             }
         }
+
+        qDebug() << "Tracked" << trackedCount << "recent messages out of" << messages.count() << "total";
     });
 
     // Connect notification manager to file manager
