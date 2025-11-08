@@ -123,11 +123,9 @@ jobs:
           echo "Commits found:"
           echo "$COMMITS"
 
-          # Create release notes
-          cat > RELEASE_NOTES.md << 'EOFMARKER'
-          ## What's New in v${{ steps.version.outputs.version }}
-
-EOFMARKER
+          # Create release notes header
+          echo "## What's New in v${{ steps.version.outputs.version }}" > RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
 
           # Append commits
           if [ -n "$COMMITS" ]; then
@@ -137,7 +135,7 @@ EOFMARKER
           fi
 
           # Append the rest
-          cat >> RELEASE_NOTES.md << 'EOFMARKER'
+          cat >> RELEASE_NOTES.md << 'EOF'
 
           ---
 
@@ -178,7 +176,7 @@ EOFMARKER
           - 🐛 Report issues: https://github.com/${{ github.repository }}/issues
           - 📖 Documentation: https://github.com/${{ github.repository }}
 
-          EOFMARKER
+          EOF
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
