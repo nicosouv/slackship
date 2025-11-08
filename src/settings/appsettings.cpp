@@ -76,3 +76,17 @@ void AppSettings::resetBandwidthStats()
     m_settings.setValue("bandwidth/total", 0);
     emit totalBandwidthBytesChanged();
 }
+
+int AppSettings::pollingInterval() const
+{
+    // Default to 30 seconds
+    return m_settings.value("api/pollingInterval", 30).toInt();
+}
+
+void AppSettings::setPollingInterval(int seconds)
+{
+    if (pollingInterval() != seconds && seconds > 0) {
+        m_settings.setValue("api/pollingInterval", seconds);
+        emit pollingIntervalChanged();
+    }
+}

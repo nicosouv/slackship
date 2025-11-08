@@ -191,6 +191,13 @@ int main(int argc, char *argv[])
     QObject::connect(slackAPI, &SlackAPI::bandwidthBytesAdded,
                      settings, &AppSettings::addBandwidthBytes);
 
+    // Connect polling interval settings
+    slackAPI->setRefreshInterval(settings->pollingInterval());  // Initialize from settings
+    QObject::connect(settings, &AppSettings::pollingIntervalChanged,
+                     slackAPI, [slackAPI, settings]() {
+        slackAPI->setRefreshInterval(settings->pollingInterval());
+    });
+
     // Expose to QML
     QQmlContext *context = view->rootContext();
     context->setContextProperty("slackAPI", slackAPI);

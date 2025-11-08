@@ -135,6 +135,36 @@ Page {
                 return (bytes / (1024 * 1024 * 1024)).toFixed(2) + " GB"
             }
 
+            ComboBox {
+                id: pollingIntervalComboBox
+                label: qsTr("Polling interval")
+                description: qsTr("How often to check for new messages")
+                width: parent.width
+
+                currentIndex: {
+                    var interval = appSettings.pollingInterval
+                    if (interval === 15) return 0
+                    if (interval === 30) return 1
+                    if (interval === 60) return 2
+                    if (interval === 120) return 3
+                    if (interval === 300) return 4
+                    return 1  // Default to 30 seconds
+                }
+
+                menu: ContextMenu {
+                    MenuItem { text: qsTr("15 seconds (more data)") }
+                    MenuItem { text: qsTr("30 seconds (default)") }
+                    MenuItem { text: qsTr("1 minute") }
+                    MenuItem { text: qsTr("2 minutes") }
+                    MenuItem { text: qsTr("5 minutes (less data)") }
+                }
+
+                onCurrentIndexChanged: {
+                    var intervals = [15, 30, 60, 120, 300]
+                    appSettings.pollingInterval = intervals[currentIndex]
+                }
+            }
+
             Column {
                 width: parent.width
                 spacing: Theme.paddingMedium
@@ -274,7 +304,7 @@ Page {
             Label {
                 x: Theme.horizontalPageMargin
                 width: parent.width - 2 * Theme.horizontalPageMargin
-                text: "Lagoon v0.16.0"
+                text: "Lagoon v0.17.0"
                 color: Theme.highlightColor
             }
 

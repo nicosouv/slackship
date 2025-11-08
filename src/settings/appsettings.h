@@ -12,6 +12,7 @@ class AppSettings : public QObject
     Q_PROPERTY(QString theme READ theme WRITE setTheme NOTIFY themeChanged)
     Q_PROPERTY(QString language READ language WRITE setLanguage NOTIFY languageChanged)
     Q_PROPERTY(qint64 totalBandwidthBytes READ totalBandwidthBytes NOTIFY totalBandwidthBytesChanged)
+    Q_PROPERTY(int pollingInterval READ pollingInterval WRITE setPollingInterval NOTIFY pollingIntervalChanged)
 
 public:
     explicit AppSettings(QObject *parent = nullptr);
@@ -33,12 +34,17 @@ public:
     void addBandwidthBytes(qint64 bytes);
     void resetBandwidthStats();
 
+    // Polling configuration
+    int pollingInterval() const;
+    void setPollingInterval(int seconds);
+
 signals:
     void notificationsEnabledChanged();
     void soundEnabledChanged();
     void themeChanged();
     void languageChanged();
     void totalBandwidthBytesChanged();
+    void pollingIntervalChanged();
 
 private:
     QSettings m_settings;
