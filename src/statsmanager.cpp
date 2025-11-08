@@ -24,9 +24,9 @@ void StatsManager::trackMessage(const QJsonObject &message)
     bool isThreadParent = !threadTs.isEmpty() && message["ts"].toString() == threadTs;
     bool isThreadReply = !threadTs.isEmpty() && message["ts"].toString() != threadTs;
 
-    // Get timestamp
+    // Get timestamp (Qt 5.6 compatible - use fromMSecsSinceEpoch instead of fromSecsSinceEpoch)
     double tsDouble = message["ts"].toString().toDouble();
-    QDateTime messageTime = QDateTime::fromSecsSinceEpoch(static_cast<qint64>(tsDouble));
+    QDateTime messageTime = QDateTime::fromMSecsSinceEpoch(static_cast<qint64>(tsDouble * 1000));
 
     // Update total messages
     m_stats.totalMessages++;
