@@ -95,6 +95,18 @@ void NotificationManager::showNotification(const QString &summary,
                                           const QString &channelId,
                                           bool isMention)
 {
+    qDebug() << "=== SHOW NOTIFICATION CALLED ===";
+    qDebug() << "Summary:" << summary;
+    qDebug() << "Body:" << body;
+    qDebug() << "Channel ID:" << channelId;
+    qDebug() << "Is Mention:" << isMention;
+    qDebug() << "Enabled:" << m_enabled;
+
+    if (!m_enabled) {
+        qDebug() << "Notifications disabled, returning early";
+        return;
+    }
+
     // Clear existing notification for this channel
     clearChannelNotifications(channelId);
 
@@ -117,8 +129,16 @@ void NotificationManager::showNotification(const QString &summary,
     // Item count for grouping (1 for now, could be extended later)
     notification->setItemCount(1);
 
-    // Store channel ID for action handling
-    notification->setProperty("channelId", channelId);
+    // CRITICAL SAILFISH OS HINTS - Based on Fernschreiber
+    // Without these, notifications may not display properly
+    notification->setHintValue("x-nemo-visibility", "public");  // Make notification visible
+    notification->setHintValue("x-nemo-priority", 120);         // Messaging app priority
+    notification->setHintValue("suppress-sound", false);        // Allow sound
+    notification->setHintValue("x-nemo-display-on", true);      // Wake display
+    notification->setHintValue("x-nemo-vibrate", true);         // Allow vibration
+
+    // Store channel ID as hint (for restoration support)
+    notification->setHintValue("x-slackship-channel-id", channelId);
 
     // Set urgency (higher for mentions)
     if (isMention) {
@@ -130,15 +150,18 @@ void NotificationManager::showNotification(const QString &summary,
     // Set timestamp (current time - could be message timestamp if available)
     notification->setTimestamp(QDateTime::currentDateTime());
 
-    // Add remote action for opening the channel
-    QVariantList remoteActions;
-    QVariantMap openAction;
-    openAction.insert("name", "default");
-    openAction.insert("displayName", tr("Open"));
-    openAction.insert("icon", "icon-m-chat");
-    remoteActions.append(openAction);
+    // Add remote action for opening the channel - USING PROPER D-BUS FORMAT
+    QVariantList args;
+    args.append(channelId);
 
-    notification->setRemoteActions(remoteActions);
+    notification->setRemoteAction(Notification::remoteAction(
+        "default",                      // action name
+        "openChannel",                  // method name
+        "harbour.lagoon",               // D-Bus service (match app name)
+        "/harbour/lagoon",              // object path
+        "harbour.lagoon.Main",          // interface
+        "openChannel",                  // method
+        args));                         // arguments (channel ID)
 
     // Connect signals
     connect(notification, &Notification::closed,
@@ -147,10 +170,13 @@ void NotificationManager::showNotification(const QString &summary,
             this, &NotificationManager::handleActionInvoked);
 
     // Publish notification
+    qDebug() << "About to call notification->publish()";
     notification->publish();
+    qDebug() << "notification->publish() called successfully";
 
     // Store for later reference
     m_activeNotifications.insert(channelId, notification);
 
-    qDebug() << "Notification shown:" << summary << "-" << body;
+    qDebug() << "Notification published:" << summary << "-" << body;
+    qDebug() << "=== END SHOW NOTIFICATION ===";
 }
