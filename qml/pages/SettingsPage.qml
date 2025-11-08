@@ -182,7 +182,12 @@ Page {
                 Label {
                     x: Theme.horizontalPageMargin
                     width: parent.width - 2 * Theme.horizontalPageMargin
-                    text: qsTr("API polling: ~%1/min").arg(formatBytes(slackAPI.sessionBandwidthBytes > 0 ? slackAPI.sessionBandwidthBytes / Math.max(1, Math.floor((new Date().getTime() / 60000))) : 0))
+                    text: {
+                        var elapsedMs = new Date().getTime() - slackAPI.sessionStartTime
+                        var elapsedMin = Math.max(1, Math.floor(elapsedMs / 60000))
+                        var bytesPerMin = slackAPI.sessionBandwidthBytes / elapsedMin
+                        return qsTr("API polling: ~%1/min").arg(formatBytes(bytesPerMin))
+                    }
                     font.pixelSize: Theme.fontSizeExtraSmall
                     color: Theme.secondaryColor
                     wrapMode: Text.WordWrap
@@ -304,7 +309,7 @@ Page {
             Label {
                 x: Theme.horizontalPageMargin
                 width: parent.width - 2 * Theme.horizontalPageMargin
-                text: "Lagoon v0.20.0"
+                text: "Lagoon v0.21.0"
                 color: Theme.highlightColor
             }
 

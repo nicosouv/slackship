@@ -23,6 +23,7 @@ class SlackAPI : public QObject
     Q_PROPERTY(bool autoRefresh READ autoRefresh WRITE setAutoRefresh NOTIFY autoRefreshChanged)
     Q_PROPERTY(int refreshInterval READ refreshInterval WRITE setRefreshInterval NOTIFY refreshIntervalChanged)
     Q_PROPERTY(qint64 sessionBandwidthBytes READ sessionBandwidthBytes NOTIFY sessionBandwidthBytesChanged)
+    Q_PROPERTY(qint64 sessionStartTime READ sessionStartTime NOTIFY sessionStartTimeChanged)
 
 public:
     explicit SlackAPI(QObject *parent = nullptr);
@@ -38,6 +39,7 @@ public:
     int refreshInterval() const { return m_refreshInterval; }
     void setRefreshInterval(int seconds);
     qint64 sessionBandwidthBytes() const { return m_sessionBandwidthBytes; }
+    qint64 sessionStartTime() const { return m_sessionStartTime; }
 
 public slots:
     // Authentication
@@ -104,6 +106,7 @@ signals:
     // Bandwidth signals
     void sessionBandwidthBytesChanged();
     void bandwidthBytesAdded(qint64 bytes);  // For updating total in AppSettings
+    void sessionStartTimeChanged();
 
 private slots:
     void handleNetworkReply(QNetworkReply *reply);
@@ -140,6 +143,7 @@ private:
 
     // Bandwidth tracking
     qint64 m_sessionBandwidthBytes;  // Bytes used in current session
+    qint64 m_sessionStartTime;  // QDateTime::currentMSecsSinceEpoch() when session started
 
     static const QString API_BASE_URL;
 };

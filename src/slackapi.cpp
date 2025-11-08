@@ -3,6 +3,7 @@
 #include <QUrlQuery>
 #include <QJsonDocument>
 #include <QDebug>
+#include <QDateTime>
 
 const QString SlackAPI::API_BASE_URL = "https://slack.com/api/";
 
@@ -16,6 +17,7 @@ SlackAPI::SlackAPI(QObject *parent)
     , m_refreshInterval(30)  // 30 seconds by default
     , m_timestampSettings("harbour-lagoon", "message-timestamps")  // Initialize persistent storage
     , m_sessionBandwidthBytes(0)  // Initialize session bandwidth
+    , m_sessionStartTime(QDateTime::currentMSecsSinceEpoch())  // Track session start time
 {
     connect(m_networkManager, &QNetworkAccessManager::finished,
             this, &SlackAPI::handleNetworkReply);
