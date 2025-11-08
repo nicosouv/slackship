@@ -19,6 +19,20 @@ Page {
         anchors.fill: parent
         model: conversationModel
 
+        // Group conversations by type (channels vs DMs)
+        section.property: "type"
+        section.criteria: ViewSection.FullString
+        section.delegate: Component {
+            SectionHeader {
+                text: {
+                    if (section === "im") return qsTr("Direct Messages")
+                    else if (section === "mpim") return qsTr("Group Messages")
+                    else if (section === "channel" || section === "group") return qsTr("Channels")
+                    else return qsTr("Other")
+                }
+            }
+        }
+
         PullDownMenu {
             MenuItem {
                 text: qsTr("Settings")

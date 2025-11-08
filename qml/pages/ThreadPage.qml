@@ -127,38 +127,25 @@ Page {
             console.log("Thread replies received:", replies.length)
             threadModel.clear()
 
-            // Add parent message first
-            if (parentMessage) {
-                threadModel.append({
-                    "id": parentMessage.client_msg_id || "",
-                    "text": parentMessage.text || "",
-                    "userId": parentMessage.user || "",
-                    "userName": "",
-                    "timestamp": parentMessage.ts || "",
-                    "threadTs": parentMessage.thread_ts || "",
-                    "threadCount": 0,
-                    "reactions": parentMessage.reactions || [],
-                    "attachments": parentMessage.attachments || [],
-                    "isEdited": parentMessage.edited !== undefined,
-                    "isOwnMessage": false
-                })
-            }
-
-            // Add replies
+            // Slack's conversations.replies includes the parent message as the first item
+            // So we use the API response directly instead of the parentMessage prop
             for (var i = 0; i < replies.length; i++) {
-                var reply = replies[i]
+                var msg = replies[i]
+                var isParent = (i === 0)  // First message is the parent
+
                 threadModel.append({
-                    "id": reply.client_msg_id || "",
-                    "text": reply.text || "",
-                    "userId": reply.user || "",
+                    "id": msg.client_msg_id || "",
+                    "text": msg.text || "",
+                    "userId": msg.user || "",
                     "userName": "",
-                    "timestamp": reply.ts || "",
-                    "threadTs": reply.thread_ts || "",
+                    "timestamp": msg.ts || "",
+                    "threadTs": msg.thread_ts || "",
                     "threadCount": 0,
-                    "reactions": reply.reactions || [],
-                    "attachments": reply.attachments || [],
-                    "isEdited": reply.edited !== undefined,
-                    "isOwnMessage": false
+                    "reactions": msg.reactions || [],
+                    "attachments": msg.attachments || [],
+                    "isEdited": msg.edited !== undefined,
+                    "isOwnMessage": false,
+                    "isParent": isParent  // Mark parent for visual differentiation
                 })
             }
         }

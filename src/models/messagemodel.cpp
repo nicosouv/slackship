@@ -35,9 +35,9 @@ QVariant MessageModel::data(const QModelIndex &index, int role) const
     case ThreadCountRole:
         return message.threadCount;
     case ReactionsRole:
-        return message.reactions;
+        return message.reactions.toVariantList();
     case AttachmentsRole:
-        return message.attachments;
+        return message.attachments.toVariantList();
     case IsEditedRole:
         return message.isEdited;
     case IsOwnMessageRole:

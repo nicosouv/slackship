@@ -32,6 +32,8 @@ ListItem {
     Row {
         anchors.fill: parent
         anchors.margins: Theme.paddingMedium
+        // Add left margin for thread replies (not parent messages)
+        anchors.leftMargin: (model.isParent !== undefined && !model.isParent) ? Theme.paddingLarge * 2 : Theme.paddingMedium
         spacing: Theme.paddingMedium
 
         // User avatar
@@ -138,30 +140,10 @@ ListItem {
             Flow {
                 width: parent.width
                 spacing: Theme.paddingSmall
-                visible: {
-                    try {
-                        var reactions = model.reactions
-                        if (typeof reactions === 'string') {
-                            reactions = JSON.parse(reactions)
-                        }
-                        return reactions && reactions.length > 0
-                    } catch (e) {
-                        return false
-                    }
-                }
+                visible: model.reactions && model.reactions.length > 0
 
                 Repeater {
-                    model: {
-                        try {
-                            var reactions = messageItem.model.reactions
-                            if (typeof reactions === 'string') {
-                                return JSON.parse(reactions)
-                            }
-                            return reactions || []
-                        } catch (e) {
-                            return []
-                        }
-                    }
+                    model: messageItem.model.reactions || []
 
                     delegate: BackgroundItem {
                         width: reactionRow.width + Theme.paddingMedium * 2
@@ -203,17 +185,7 @@ ListItem {
 
             // Image attachments
             Repeater {
-                model: {
-                    try {
-                        var attachments = messageItem.model.attachments
-                        if (typeof attachments === 'string') {
-                            return JSON.parse(attachments)
-                        }
-                        return attachments
-                    } catch (e) {
-                        return []
-                    }
-                }
+                model: messageItem.model.attachments || []
 
                 delegate: Loader {
                     width: messageColumn.width

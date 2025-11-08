@@ -42,7 +42,9 @@ ListItem {
                     text: {
                         if (model.type === "im" && model.userId) {
                             // For DMs, show user's real name
-                            return userModel.getUserName(model.userId)
+                            var userName = userModel.getUserName(model.userId)
+                            console.log("DM userId:", model.userId, "-> userName:", userName)
+                            return userName
                         } else if (model.type === "mpim") {
                             // For multi-person DMs, show name without #
                             return model.name
