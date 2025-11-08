@@ -45,6 +45,10 @@ Page {
                 onClicked: pageStack.push(Qt.resolvedUrl("SettingsPage.qml"))
             }
             MenuItem {
+                text: qsTr("Workspace Insights")
+                onClicked: pageStack.push(Qt.resolvedUrl("StatsPage.qml"))
+            }
+            MenuItem {
                 text: qsTr("Switch Workspace")
                 visible: workspaceManager.workspaceCount() > 1
                 onClicked: pageStack.push(Qt.resolvedUrl("WorkspaceSwitcher.qml"))

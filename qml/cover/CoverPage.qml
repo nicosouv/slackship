@@ -71,21 +71,13 @@ CoverBackground {
         width: parent.width - Theme.paddingLarge * 2
         spacing: Theme.paddingMedium
 
-        // Small app logo
-        Rectangle {
+        // App logo image
+        Image {
             anchors.horizontalCenter: parent.horizontalCenter
             width: Theme.iconSizeSmall
             height: Theme.iconSizeSmall
-            radius: Theme.paddingSmall / 2
-            color: Theme.rgba(Theme.highlightBackgroundColor, 0.2)
-
-            Label {
-                anchors.centerIn: parent
-                text: "L"
-                font.pixelSize: Theme.fontSizeSmall
-                font.bold: true
-                color: Theme.highlightColor
-            }
+            source: "/usr/share/icons/hicolor/86x86/apps/harbour-lagoon.png"
+            smooth: true
         }
 
         // Workspace name (larger, more prominent)
@@ -144,13 +136,25 @@ CoverBackground {
             visible: lastMessageText.length > 0
         }
 
-        // Connection status
+        // Connection status or stats
         Label {
             anchors.horizontalCenter: parent.horizontalCenter
-            text: slackAPI.isAuthenticated ? qsTr("Connected") : qsTr("Disconnected")
+            text: {
+                if (!slackAPI.isAuthenticated) {
+                    return qsTr("Disconnected")
+                } else if (lastMessageText.length > 0) {
+                    return ""
+                } else if (statsManager.totalMessages > 0) {
+                    return qsTr("%1 messages • %2 day streak").arg(statsManager.totalMessages).arg(statsManager.currentStreak)
+                } else {
+                    return qsTr("Connected")
+                }
+            }
             font.pixelSize: Theme.fontSizeExtraSmall
             color: slackAPI.isAuthenticated ? Theme.highlightColor : Theme.secondaryColor
-            visible: !lastMessageText.length
+            visible: text.length > 0
+            horizontalAlignment: Text.AlignHCenter
+            width: parent.width
         }
     }
 
