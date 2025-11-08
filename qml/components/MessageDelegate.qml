@@ -7,6 +7,14 @@ ListItem {
     id: messageItem
     contentHeight: messageColumn.height + Theme.paddingMedium * 2
 
+    // Highlight parent message in threads
+    Rectangle {
+        anchors.fill: parent
+        color: Theme.rgba(Theme.highlightBackgroundColor, 0.1)
+        visible: model.isParent !== undefined && model.isParent
+        radius: Theme.paddingSmall
+    }
+
     Component {
         id: imageAttachmentComponent
         ImageAttachment {
@@ -26,6 +34,30 @@ ListItem {
             fileType: attachmentData.mimetype || ""
             fileSize: attachmentData.size || 0
             downloadUrl: attachmentData.url_private || ""
+        }
+    }
+
+    // Thread tree visualization
+    Item {
+        anchors.fill: parent
+        visible: model.isParent !== undefined && !model.isParent
+
+        // Vertical line connecting to parent
+        Rectangle {
+            x: Theme.horizontalPageMargin + Theme.paddingLarge - 1
+            y: 0
+            width: 2
+            height: parent.height / 2 + Theme.paddingMedium
+            color: Theme.rgba(Theme.highlightColor, 0.3)
+        }
+
+        // Horizontal branch line
+        Rectangle {
+            x: Theme.horizontalPageMargin + Theme.paddingLarge - 1
+            y: parent.height / 2 + Theme.paddingMedium
+            width: Theme.paddingLarge
+            height: 2
+            color: Theme.rgba(Theme.highlightColor, 0.3)
         }
     }
 
@@ -89,6 +121,25 @@ ListItem {
                     font.bold: true
                     color: Theme.highlightColor
                     font.pixelSize: Theme.fontSizeSmall
+                }
+
+                // "Thread starter" badge for parent message
+                Rectangle {
+                    visible: model.isParent !== undefined && model.isParent
+                    height: Theme.fontSizeExtraSmall + Theme.paddingSmall
+                    width: threadStarterLabel.width + Theme.paddingMedium
+                    radius: Theme.paddingSmall
+                    color: Theme.rgba(Theme.highlightColor, 0.2)
+                    border.color: Theme.rgba(Theme.highlightColor, 0.4)
+                    border.width: 1
+
+                    Label {
+                        id: threadStarterLabel
+                        anchors.centerIn: parent
+                        text: "🧵 " + qsTr("Thread")
+                        font.pixelSize: Theme.fontSizeExtraSmall
+                        color: Theme.highlightColor
+                    }
                 }
 
                 Label {
