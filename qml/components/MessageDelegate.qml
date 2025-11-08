@@ -254,6 +254,41 @@ ListItem {
                 }
             }
 
+            // Files (uploaded images, documents, etc.)
+            Repeater {
+                model: messageItem.model.files || []
+
+                delegate: Loader {
+                    width: messageColumn.width
+                    sourceComponent: {
+                        var file = modelData
+                        // Check if it's an image file
+                        if (file.mimetype && file.mimetype.startsWith("image/")) {
+                            return imageAttachmentComponent
+                        } else {
+                            return fileAttachmentComponent
+                        }
+                    }
+
+                    property var attachmentData: {
+                        var file = modelData
+                        // Map file object to attachment-like structure for components
+                        return {
+                            "image_url": file.url_private || file.permalink,
+                            "thumb_url": file.thumb_360 || file.thumb_480 || file.thumb_160 || file.thumb_80,
+                            "image_width": file.original_w || 0,
+                            "image_height": file.original_h || 0,
+                            "title": file.title || file.name || "",
+                            "id": file.id || "",
+                            "name": file.name || file.title || "",
+                            "mimetype": file.mimetype || "",
+                            "size": file.size || 0,
+                            "url_private": file.url_private || ""
+                        }
+                    }
+                }
+            }
+
             // Thread indicator
             BackgroundItem {
                 width: parent.width

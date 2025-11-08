@@ -38,6 +38,8 @@ QVariant MessageModel::data(const QModelIndex &index, int role) const
         return message.reactions.toVariantList();
     case AttachmentsRole:
         return message.attachments.toVariantList();
+    case FilesRole:
+        return message.files.toVariantList();
     case IsEditedRole:
         return message.isEdited;
     case IsOwnMessageRole:
@@ -59,6 +61,7 @@ QHash<int, QByteArray> MessageModel::roleNames() const
     roles[ThreadCountRole] = "threadCount";
     roles[ReactionsRole] = "reactions";
     roles[AttachmentsRole] = "attachments";
+    roles[FilesRole] = "files";
     roles[IsEditedRole] = "isEdited";
     roles[IsOwnMessageRole] = "isOwnMessage";
     return roles;
@@ -164,6 +167,7 @@ MessageModel::Message MessageModel::parseMessage(const QJsonObject &json) const
     msg.threadCount = json["reply_count"].toInt();
     msg.reactions = json["reactions"].toArray();
     msg.attachments = json["attachments"].toArray();
+    msg.files = json["files"].toArray();
     msg.isEdited = json["edited"].isObject();
     msg.isOwnMessage = false; // Will be set based on current user
 

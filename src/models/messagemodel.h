@@ -21,6 +21,7 @@ public:
         ThreadCountRole,
         ReactionsRole,
         AttachmentsRole,
+        FilesRole,
         IsEditedRole,
         IsOwnMessageRole
     };
@@ -55,6 +56,7 @@ private:
         int threadCount;
         QJsonArray reactions;
         QJsonArray attachments;
+        QJsonArray files;
         bool isEdited;
         bool isOwnMessage;
     };
