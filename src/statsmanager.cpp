@@ -105,6 +105,11 @@ void StatsManager::updateStreak(const QDateTime &messageTime)
     QDate messageDate = messageTime.date();
     QDate today = QDate::currentDate();
 
+    // Only update streak for messages from today or yesterday (ignore old history)
+    if (messageDate < today.addDays(-1)) {
+        return;
+    }
+
     if (!m_stats.lastMessageDate.isValid()) {
         // First message ever
         m_stats.currentStreak = 1;
@@ -117,16 +122,28 @@ void StatsManager::updateStreak(const QDateTime &messageTime)
     if (messageDate == today) {
         // Message today
         if (lastDate == today.addDays(-1)) {
-            // Continue streak
+            // Continue streak from yesterday
             m_stats.currentStreak++;
-        } else if (lastDate != today) {
+            m_stats.lastMessageDate = messageTime;
+        } else if (lastDate == today) {
+            // Already counted today, just update timestamp
+            m_stats.lastMessageDate = messageTime;
+        } else {
             // Broke streak, start new
             m_stats.currentStreak = 1;
+            m_stats.lastMessageDate = messageTime;
         }
-        // If lastDate == today, don't increment (already counted)
+    } else if (messageDate == today.addDays(-1) && lastDate < messageDate) {
+        // Message from yesterday
+        if (lastDate == today.addDays(-2)) {
+            // Continue streak
+            m_stats.currentStreak++;
+        } else {
+            // Start new streak
+            m_stats.currentStreak = 1;
+        }
+        m_stats.lastMessageDate = messageTime;
     }
-
-    m_stats.lastMessageDate = messageTime;
 }
 
 void StatsManager::extractEmojis(const QString &text)
