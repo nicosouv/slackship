@@ -26,3 +26,5 @@ There are many other Qt modules which are not used; most are obvious but these a
     QtOpengl
     QtQuickWidgets
     qtWidgets
+- memory a chaque nouveau string, il faut penser à le traduire via les fichiers de traductions
+- memory a chasue nouveau tag git, il faut mettre à jour le numéro de version sur la page de Login ainsi que la page de Settings

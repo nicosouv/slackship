@@ -377,11 +377,6 @@
         <translation>Lingua dell'applicazione</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="25"/>
-        <source>Requires app restart to take effect</source>
-        <translation>Richiede il riavvio dell'app per avere effetto</translation>
-    </message>
-    <message>
         <location filename="../qml/pages/SettingsPage.qml" line="53"/>
         <source>Notifications</source>
         <translation>Notifiche</translation>
@@ -490,6 +485,26 @@
         <location filename="../qml/pages/SettingsPage.qml" line="230"/>
         <source>A native Slack client for Sailfish OS</source>
         <translation>Un client Slack nativo per Sailfish OS</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/SettingsPage.qml" line="256"/>
+        <source>Restart Required</source>
+        <translation>Riavvio necessario</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/SettingsPage.qml" line="257"/>
+        <source>Restart</source>
+        <translation>Riavvia</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/SettingsPage.qml" line="258"/>
+        <source>Cancel</source>
+        <translation>Annulla</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/SettingsPage.qml" line="264"/>
+        <source>The application needs to restart to apply the new language. Restart now?</source>
+        <translation>L'applicazione deve essere riavviata per applicare la nuova lingua. Riavviare ora?</translation>
     </message>
 </context>
 <context>

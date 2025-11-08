@@ -377,11 +377,6 @@
         <translation>Sovelluksen kieli</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="25"/>
-        <source>Requires app restart to take effect</source>
-        <translation>Vaatii sovelluksen uudelleenkäynnistyksen</translation>
-    </message>
-    <message>
         <location filename="../qml/pages/SettingsPage.qml" line="53"/>
         <source>Notifications</source>
         <translation>Ilmoitukset</translation>
@@ -490,6 +485,26 @@
         <location filename="../qml/pages/SettingsPage.qml" line="230"/>
         <source>A native Slack client for Sailfish OS</source>
         <translation>Natiivi Slack-asiakasohjelma Sailfish OS:lle</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/SettingsPage.qml" line="256"/>
+        <source>Restart Required</source>
+        <translation>Uudelleenkäynnistys vaaditaan</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/SettingsPage.qml" line="257"/>
+        <source>Restart</source>
+        <translation>Käynnistä uudelleen</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/SettingsPage.qml" line="258"/>
+        <source>Cancel</source>
+        <translation>Peruuta</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/SettingsPage.qml" line="264"/>
+        <source>The application needs to restart to apply the new language. Restart now?</source>
+        <translation>Sovellus on käynnistettävä uudelleen, jotta uusi kieli otetaan käyttöön. Käynnistetäänkö uudelleen nyt?</translation>
     </message>
 </context>
 <context>

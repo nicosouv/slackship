@@ -4,6 +4,8 @@ import Sailfish.Silica 1.0
 Page {
     id: settingsPage
 
+    property string previousLanguage: appSettings.language || "en"
+
     SilicaFlickable {
         anchors.fill: parent
         contentHeight: column.height
@@ -21,8 +23,8 @@ Page {
             }
 
             ComboBox {
+                id: languageComboBox
                 label: qsTr("Application language")
-                description: qsTr("Requires app restart to take effect")
                 width: parent.width
 
                 currentIndex: {
@@ -45,7 +47,13 @@ Page {
 
                 onCurrentIndexChanged: {
                     var langCodes = ["en", "fr", "fi", "it", "es"]
-                    appSettings.language = langCodes[currentIndex]
+                    var newLang = langCodes[currentIndex]
+
+                    // Only show dialog if language actually changed
+                    if (newLang !== previousLanguage) {
+                        appSettings.language = newLang
+                        restartDialog.open()
+                    }
                 }
             }
 
@@ -220,7 +228,7 @@ Page {
             Label {
                 x: Theme.horizontalPageMargin
                 width: parent.width - 2 * Theme.horizontalPageMargin
-                text: "Lagoon v0.11.2"
+                text: "Lagoon v0.11.3"
                 color: Theme.highlightColor
             }
 
@@ -239,5 +247,40 @@ Page {
 
     RemorsePopup {
         id: remorse
+    }
+
+    Dialog {
+        id: restartDialog
+
+        DialogHeader {
+            title: qsTr("Restart Required")
+            acceptText: qsTr("Restart")
+            cancelText: qsTr("Cancel")
+        }
+
+        Label {
+            anchors.centerIn: parent
+            width: parent.width - 2 * Theme.horizontalPageMargin
+            text: qsTr("The application needs to restart to apply the new language. Restart now?")
+            wrapMode: Text.WordWrap
+            horizontalAlignment: Text.AlignHCenter
+        }
+
+        onAccepted: {
+            Qt.quit()  // Force app restart
+        }
+
+        onRejected: {
+            // Revert to previous language
+            appSettings.language = previousLanguage
+            // Reset ComboBox index (need to recalculate based on previousLanguage)
+            var langCodes = ["en", "fr", "fi", "it", "es"]
+            for (var i = 0; i < langCodes.length; i++) {
+                if (previousLanguage.startsWith(langCodes[i])) {
+                    languageComboBox.currentIndex = i
+                    break
+                }
+            }
+        }
     }
 }
