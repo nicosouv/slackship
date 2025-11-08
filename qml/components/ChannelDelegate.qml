@@ -28,6 +28,14 @@ ListItem {
                 width: parent.width
                 spacing: Theme.paddingSmall
 
+                // Star icon if starred
+                Label {
+                    text: "⭐"
+                    font.pixelSize: Theme.fontSizeSmall
+                    color: Theme.highlightColor
+                    visible: model.isStarred
+                }
+
                 // Icon based on type
                 Label {
                     text: model.type === "im" ? "💬" :
@@ -80,6 +88,12 @@ ListItem {
     }
 
     menu: ContextMenu {
+        MenuItem {
+            text: model.isStarred ? qsTr("Unstar") : qsTr("Star")
+            onClicked: {
+                conversationModel.toggleStar(model.id)
+            }
+        }
         MenuItem {
             text: qsTr("Mark as read")
             onClicked: {

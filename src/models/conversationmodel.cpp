@@ -1,4 +1,5 @@
 #include "conversationmodel.h"
+#include <algorithm>
 
 ConversationModel::ConversationModel(QObject *parent)
     : QAbstractListModel(parent)
@@ -41,6 +42,8 @@ QVariant ConversationModel::data(const QModelIndex &index, int role) const
         return conversation.purpose;
     case UserIdRole:
         return conversation.userId;
+    case IsStarredRole:
+        return conversation.isStarred;
     default:
         return QVariant();
     }
@@ -60,6 +63,7 @@ QHash<int, QByteArray> ConversationModel::roleNames() const
     roles[TopicRole] = "topic";
     roles[PurposeRole] = "purpose";
     roles[UserIdRole] = "userId";
+    roles[IsStarredRole] = "isStarred";
     return roles;
 }
 
@@ -74,6 +78,9 @@ void ConversationModel::updateConversations(const QJsonArray &conversations)
             m_conversations.append(conv);
         }
     }
+
+    // Sort: unread first, then starred, then alphabetically
+    sortConversations();
 
     endResetModel();
 }
@@ -131,6 +138,7 @@ ConversationModel::Conversation ConversationModel::parseConversation(const QJson
     conv.lastMessage = "";
     conv.lastMessageTime = 0;
     conv.userId = json["user"].toString();  // For DMs
+    conv.isStarred = json["is_starred"].toBool();
 
     QJsonObject topic = json["topic"].toObject();
     conv.topic = topic["value"].toString();
@@ -162,4 +170,43 @@ int ConversationModel::privateChannelCount() const
         }
     }
     return count;
+}
+
+void ConversationModel::sortConversations()
+{
+    std::sort(m_conversations.begin(), m_conversations.end(),
+              [](const Conversation &a, const Conversation &b) {
+        // Priority 1: Unread messages (descending by count)
+        if (a.unreadCount > 0 && b.unreadCount == 0) return true;
+        if (a.unreadCount == 0 && b.unreadCount > 0) return false;
+        if (a.unreadCount > 0 && b.unreadCount > 0) {
+            if (a.unreadCount != b.unreadCount) {
+                return a.unreadCount > b.unreadCount;
+            }
+        }
+
+        // Priority 2: Starred channels
+        if (a.isStarred && !b.isStarred) return true;
+        if (!a.isStarred && b.isStarred) return false;
+
+        // Priority 3: Alphabetical by name
+        return a.name.toLower() < b.name.toLower();
+    });
+}
+
+void ConversationModel::toggleStar(const QString &conversationId)
+{
+    int index = findConversationIndex(conversationId);
+    if (index >= 0) {
+        m_conversations[index].isStarred = !m_conversations[index].isStarred;
+
+        // Resort the list
+        beginResetModel();
+        sortConversations();
+        endResetModel();
+
+        // Notify about data change
+        QModelIndex modelIndex = createIndex(index, 0);
+        emit dataChanged(modelIndex, modelIndex, {IsStarredRole});
+    }
 }

@@ -21,7 +21,8 @@ public:
         LastMessageTimeRole,
         TopicRole,
         PurposeRole,
-        UserIdRole  // For DMs - the user ID of the other person
+        UserIdRole,  // For DMs - the user ID of the other person
+        IsStarredRole  // Whether the channel is starred/favorited
     };
 
     explicit ConversationModel(QObject *parent = nullptr);
@@ -35,6 +36,7 @@ public slots:
     void addConversation(const QJsonObject &conversation);
     void removeConversation(const QString &conversationId);
     void updateUnreadCount(const QString &conversationId, int count);
+    void toggleStar(const QString &conversationId);
 
     // Stats helpers
     Q_INVOKABLE int publicChannelCount() const;
@@ -53,11 +55,13 @@ private:
         QString topic;
         QString purpose;
         QString userId;  // For DMs - the other user's ID
+        bool isStarred;  // Whether the channel is starred/favorited
     };
 
     QList<Conversation> m_conversations;
     int findConversationIndex(const QString &conversationId) const;
     Conversation parseConversation(const QJsonObject &json) const;
+    void sortConversations();
 };
 
 #endif // CONVERSATIONMODEL_H
