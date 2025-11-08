@@ -67,6 +67,9 @@ ApplicationWindow {
             if (slackAPI.isAuthenticated) {
                 console.log("=== AUTHENTICATION SUCCESS ===")
                 console.log("Saving workspace with token length:", slackAPI.token.length)
+                console.log("teamId:", slackAPI.teamId)
+                console.log("workspaceName:", slackAPI.workspaceName)
+                console.log("currentUserId:", slackAPI.currentUserId)
 
                 slackAPI.fetchConversations()
                 slackAPI.fetchUsers()
