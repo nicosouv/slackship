@@ -83,6 +83,94 @@ Page {
             }
 
             SectionHeader {
+                text: qsTr("Insights")
+            }
+
+            // Stats preview
+            BackgroundItem {
+                width: parent.width
+                height: statsPreview.height + Theme.paddingLarge * 2
+                onClicked: pageStack.push(Qt.resolvedUrl("StatsPage.qml"))
+
+                Column {
+                    id: statsPreview
+                    anchors.centerIn: parent
+                    width: parent.width - 2 * Theme.horizontalPageMargin
+                    spacing: Theme.paddingMedium
+
+                    Row {
+                        width: parent.width
+                        spacing: Theme.paddingLarge
+
+                        Column {
+                            width: (parent.width - parent.spacing * 2) / 3
+                            Label {
+                                width: parent.width
+                                text: statsManager.totalMessages
+                                font.pixelSize: Theme.fontSizeHuge
+                                font.bold: true
+                                color: Theme.highlightColor
+                                horizontalAlignment: Text.AlignHCenter
+                            }
+                            Label {
+                                width: parent.width
+                                text: qsTr("Messages")
+                                font.pixelSize: Theme.fontSizeExtraSmall
+                                color: Theme.secondaryColor
+                                horizontalAlignment: Text.AlignHCenter
+                            }
+                        }
+
+                        Column {
+                            width: (parent.width - parent.spacing * 2) / 3
+                            Label {
+                                width: parent.width
+                                text: statsManager.messagesThisWeek
+                                font.pixelSize: Theme.fontSizeHuge
+                                font.bold: true
+                                color: Theme.highlightColor
+                                horizontalAlignment: Text.AlignHCenter
+                            }
+                            Label {
+                                width: parent.width
+                                text: qsTr("This Week")
+                                font.pixelSize: Theme.fontSizeExtraSmall
+                                color: Theme.secondaryColor
+                                horizontalAlignment: Text.AlignHCenter
+                            }
+                        }
+
+                        Column {
+                            width: (parent.width - parent.spacing * 2) / 3
+                            Label {
+                                width: parent.width
+                                text: "🔥 " + statsManager.currentStreak
+                                font.pixelSize: Theme.fontSizeHuge
+                                font.bold: true
+                                color: Theme.highlightColor
+                                horizontalAlignment: Text.AlignHCenter
+                            }
+                            Label {
+                                width: parent.width
+                                text: qsTr("Streak")
+                                font.pixelSize: Theme.fontSizeExtraSmall
+                                color: Theme.secondaryColor
+                                horizontalAlignment: Text.AlignHCenter
+                            }
+                        }
+                    }
+
+                    Label {
+                        width: parent.width
+                        text: qsTr("Tap to view detailed statistics →")
+                        font.pixelSize: Theme.fontSizeSmall
+                        color: Theme.highlightColor
+                        horizontalAlignment: Text.AlignHCenter
+                    }
+                }
+            }
+
+            SectionHeader {
                 text: qsTr("About")
             }
 

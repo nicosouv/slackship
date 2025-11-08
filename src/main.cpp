@@ -13,6 +13,7 @@
 #include "workspacemanager.h"
 #include "filemanager.h"
 #include "oauthmanager.h"
+#include "statsmanager.h"
 #include "models/conversationmodel.h"
 #include "models/messagemodel.h"
 #include "models/usermodel.h"
@@ -32,6 +33,7 @@ int main(int argc, char *argv[])
     NotificationManager *notificationManager = new NotificationManager(app.data());
     FileManager *fileManager = new FileManager(app.data());
     OAuthManager *oauthManager = new OAuthManager(app.data());
+    StatsManager *statsManager = new StatsManager(app.data());
 
     // Create API instance
     SlackAPI *slackAPI = new SlackAPI(app.data());
@@ -58,12 +60,15 @@ int main(int argc, char *argv[])
     QObject::connect(slackAPI, &SlackAPI::usersReceived,
                      userModel, &UserModel::updateUsers);
 
-    // Connect API to notification manager
+    // Connect API to notification manager and stats manager
     QObject::connect(slackAPI, &SlackAPI::messageReceived,
-                     [notificationManager, conversationModel, userModel](const QJsonObject &message) {
+                     [notificationManager, statsManager, conversationModel, userModel](const QJsonObject &message) {
         QString channelId = message["channel"].toString();
         QString userId = message["user"].toString();
         QString text = message["text"].toString();
+
+        // Track message in stats
+        statsManager->trackMessage(message);
 
         // Find channel name
         QString channelName = channelId;
@@ -87,6 +92,16 @@ int main(int argc, char *argv[])
         }
     });
 
+    // Track messages when history is received
+    QObject::connect(slackAPI, &SlackAPI::messagesReceived,
+                     [statsManager](const QJsonArray &messages) {
+        for (const QJsonValue &value : messages) {
+            if (value.isObject()) {
+                statsManager->trackMessage(value.toObject());
+            }
+        }
+    });
+
     // Connect notification manager to file manager
     QObject::connect(notificationManager, &NotificationManager::enabledChanged,
                      settings, [settings, notificationManager]() {
@@ -103,6 +118,7 @@ int main(int argc, char *argv[])
     context->setContextProperty("notificationManager", notificationManager);
     context->setContextProperty("fileManager", fileManager);
     context->setContextProperty("oauthManager", oauthManager);
+    context->setContextProperty("statsManager", statsManager);
     context->setContextProperty("conversationModel", conversationModel);
     context->setContextProperty("messageModel", messageModel);
     context->setContextProperty("userModel", userModel);

@@ -28,6 +28,7 @@ SOURCES += \
     src/filemanager.cpp \
     src/dbusclient.cpp \
     src/oauthmanager.cpp \
+    src/statsmanager.cpp \
     src/models/conversationmodel.cpp \
     src/models/messagemodel.cpp \
     src/models/usermodel.cpp \
@@ -42,6 +43,7 @@ HEADERS += \
     src/filemanager.h \
     src/dbusclient.h \
     src/oauthmanager.h \
+    src/statsmanager.h \
     src/models/conversationmodel.h \
     src/models/messagemodel.h \
     src/models/usermodel.h \
@@ -55,8 +57,10 @@ DISTFILES += \
     qml/pages/ConversationPage.qml \
     qml/pages/SettingsPage.qml \
     qml/pages/LoginPage.qml \
+    qml/pages/StatsPage.qml \
     qml/components/MessageDelegate.qml \
     qml/components/ChannelDelegate.qml \
+    qml/components/StatCard.qml \
     qml/components/ReactionBubble.qml \
     qml/components/ImageAttachment.qml \
     qml/components/FileAttachment.qml \
