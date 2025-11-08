@@ -105,9 +105,17 @@ void WorkspaceManager::addWorkspace(const QString &name,
                                    const QString &userId,
                                    const QString &domain)
 {
+    qDebug() << "=== ADD WORKSPACE CALLED ===";
+    qDebug() << "Name:" << name;
+    qDebug() << "TeamId:" << teamId;
+    qDebug() << "TeamId isEmpty:" << teamId.isEmpty();
+    qDebug() << "Current workspace count:" << m_workspaces.count();
+
     // Check if workspace already exists
     for (int i = 0; i < m_workspaces.count(); ++i) {
-        if (m_workspaces[i].teamId == teamId) {
+        qDebug() << "Checking workspace" << i << "- stored teamId:" << m_workspaces[i].teamId;
+        if (m_workspaces[i].teamId == teamId && !teamId.isEmpty()) {
+            qDebug() << "Found existing workspace at index" << i << "- UPDATING";
             // Update existing workspace
             m_workspaces[i].token = token;
             m_workspaces[i].name = name;
@@ -123,6 +131,7 @@ void WorkspaceManager::addWorkspace(const QString &name,
     }
 
     // Add new workspace
+    qDebug() << "No existing workspace found - ADDING NEW";
     Workspace workspace;
     workspace.id = QUuid::createUuid().toString();
     workspace.name = name;
@@ -139,6 +148,7 @@ void WorkspaceManager::addWorkspace(const QString &name,
 
     saveWorkspaces();
     emit workspaceAdded(name);
+    qDebug() << "Workspace added - new count:" << m_workspaces.count();
 
     // If this is the first workspace, make it active
     if (m_workspaces.count() == 1) {
