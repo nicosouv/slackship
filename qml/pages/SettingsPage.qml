@@ -17,6 +17,39 @@ Page {
             }
 
             SectionHeader {
+                text: qsTr("Language")
+            }
+
+            ComboBox {
+                label: qsTr("Application language")
+                description: qsTr("Requires app restart to take effect")
+                width: parent.width
+
+                currentIndex: {
+                    var lang = appSettings.language || ""
+                    if (lang === "" || lang.startsWith("en")) return 0  // English (default)
+                    if (lang.startsWith("fr")) return 1  // French
+                    if (lang.startsWith("fi")) return 2  // Finnish
+                    if (lang.startsWith("it")) return 3  // Italian
+                    if (lang.startsWith("es")) return 4  // Spanish
+                    return 0  // Default to English
+                }
+
+                menu: ContextMenu {
+                    MenuItem { text: "English" }
+                    MenuItem { text: "Français" }
+                    MenuItem { text: "Suomi" }
+                    MenuItem { text: "Italiano" }
+                    MenuItem { text: "Español" }
+                }
+
+                onCurrentIndexChanged: {
+                    var langCodes = ["en", "fr", "fi", "it", "es"]
+                    appSettings.language = langCodes[currentIndex]
+                }
+            }
+
+            SectionHeader {
                 text: qsTr("Notifications")
             }
 

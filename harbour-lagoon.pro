@@ -76,8 +76,11 @@ DISTFILES += \
 
 SAILFISHAPP_ICONS = 86x86 108x108 128x128 172x172
 
-# Translations disabled for now - files don't exist yet
-# CONFIG += sailfishapp_i18n
-# TRANSLATIONS += \
-#     translations/harbour-lagoon-en.ts \
-#     translations/harbour-lagoon-fr.ts
+# Translations
+CONFIG += sailfishapp_i18n
+TRANSLATIONS += \
+    translations/harbour-lagoon-en.ts \
+    translations/harbour-lagoon-fr.ts \
+    translations/harbour-lagoon-fi.ts \
+    translations/harbour-lagoon-it.ts \
+    translations/harbour-lagoon-es.ts

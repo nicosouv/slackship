@@ -10,6 +10,7 @@ class AppSettings : public QObject
     Q_PROPERTY(bool notificationsEnabled READ notificationsEnabled WRITE setNotificationsEnabled NOTIFY notificationsEnabledChanged)
     Q_PROPERTY(bool soundEnabled READ soundEnabled WRITE setSoundEnabled NOTIFY soundEnabledChanged)
     Q_PROPERTY(QString theme READ theme WRITE setTheme NOTIFY themeChanged)
+    Q_PROPERTY(QString language READ language WRITE setLanguage NOTIFY languageChanged)
 
 public:
     explicit AppSettings(QObject *parent = nullptr);
@@ -23,10 +24,14 @@ public:
     QString theme() const;
     void setTheme(const QString &theme);
 
+    QString language() const;
+    void setLanguage(const QString &language);
+
 signals:
     void notificationsEnabledChanged();
     void soundEnabledChanged();
     void themeChanged();
+    void languageChanged();
 
 private:
     QSettings m_settings;

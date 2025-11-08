@@ -44,3 +44,17 @@ void AppSettings::setTheme(const QString &theme)
         emit themeChanged();
     }
 }
+
+QString AppSettings::language() const
+{
+    // Default to system language, falling back to English
+    return m_settings.value("language", "").toString();
+}
+
+void AppSettings::setLanguage(const QString &language)
+{
+    if (this->language() != language) {
+        m_settings.setValue("language", language);
+        emit languageChanged();
+    }
+}

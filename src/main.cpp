@@ -7,6 +7,8 @@
 #include <QQuickView>
 #include <QQmlContext>
 #include <QGuiApplication>
+#include <QTranslator>
+#include <QLocale>
 
 #include "slackapi.h"
 #include "notificationmanager.h"
@@ -25,6 +27,36 @@ int main(int argc, char *argv[])
 
     app->setOrganizationName("harbour-lagoon");
     app->setApplicationName("harbour-lagoon");
+
+    // Load translation
+    QScopedPointer<QTranslator> translator(new QTranslator(app.data()));
+    AppSettings tempSettings; // Temporary settings object to read language preference
+    QString language = tempSettings.language();
+
+    // If no language is set, use system locale
+    if (language.isEmpty()) {
+        language = QLocale::system().name();
+        qDebug() << "Using system locale:" << language;
+    } else {
+        qDebug() << "Using configured language:" << language;
+    }
+
+    // Try to load the translation file
+    QString translationFile = QString("harbour-lagoon-%1").arg(language);
+    if (translator->load(translationFile, SailfishApp::pathTo("translations").toLocalFile())) {
+        app->installTranslator(translator.data());
+        qDebug() << "Loaded translation:" << translationFile;
+    } else {
+        // Try loading just the language code (e.g., "fr" instead of "fr_FR")
+        QString shortLang = language.left(2);
+        translationFile = QString("harbour-lagoon-%1").arg(shortLang);
+        if (translator->load(translationFile, SailfishApp::pathTo("translations").toLocalFile())) {
+            app->installTranslator(translator.data());
+            qDebug() << "Loaded translation:" << translationFile;
+        } else {
+            qDebug() << "No translation found for:" << language << ", using English";
+        }
+    }
 
     QScopedPointer<QQuickView> view(SailfishApp::createView());
 
