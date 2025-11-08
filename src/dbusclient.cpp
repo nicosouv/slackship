@@ -13,9 +13,9 @@ DBusClient::DBusClient(QObject *parent)
     , m_unreadCount(0)
 {
     // Create D-Bus interface
-    m_interface = new QDBusInterface("org.harbour.slackship",
-                                     "/org/harbour/slackship",
-                                     "org.harbour.slackship",
+    m_interface = new QDBusInterface("org.harbour.lagoon",
+                                     "/org/harbour/lagoon",
+                                     "org.harbour.lagoon",
                                      QDBusConnection::sessionBus(),
                                      this);
 
@@ -96,7 +96,7 @@ void DBusClient::startDaemon()
 void DBusClient::checkDaemonStatus()
 {
     QDBusConnectionInterface *interface = QDBusConnection::sessionBus().interface();
-    bool running = interface->isServiceRegistered("org.harbour.slackship");
+    bool running = interface->isServiceRegistered("org.harbour.lagoon");
 
     if (running != m_isDaemonRunning) {
         m_isDaemonRunning = running;
@@ -154,36 +154,36 @@ void DBusClient::connectToSignals()
 {
     // Connect to daemon signals via D-Bus
     QDBusConnection::sessionBus().connect(
-        "org.harbour.slackship",
-        "/org/harbour/slackship",
-        "org.harbour.slackship",
+        "org.harbour.lagoon",
+        "/org/harbour/lagoon",
+        "org.harbour.lagoon",
         "NewMessageReceived",
         this,
         SLOT(handleNewMessageReceived(QString,QString))
     );
 
     QDBusConnection::sessionBus().connect(
-        "org.harbour.slackship",
-        "/org/harbour/slackship",
-        "org.harbour.slackship",
+        "org.harbour.lagoon",
+        "/org/harbour/lagoon",
+        "org.harbour.lagoon",
         "UnreadCountChanged",
         this,
         SLOT(handleUnreadCountChanged(int))
     );
 
     QDBusConnection::sessionBus().connect(
-        "org.harbour.slackship",
-        "/org/harbour/slackship",
-        "org.harbour.slackship",
+        "org.harbour.lagoon",
+        "/org/harbour/lagoon",
+        "org.harbour.lagoon",
         "ConnectionStateChanged",
         this,
         SLOT(handleConnectionStateChanged(bool))
     );
 
     QDBusConnection::sessionBus().connect(
-        "org.harbour.slackship",
-        "/org/harbour/slackship",
-        "org.harbour.slackship",
+        "org.harbour.lagoon",
+        "/org/harbour/lagoon",
+        "org.harbour.lagoon",
         "SyncCompleted",
         this,
         SLOT(handleSyncCompleted())

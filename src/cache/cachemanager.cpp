@@ -27,7 +27,7 @@ bool CacheManager::initialize()
         dataDir.mkpath(".");
     }
 
-    QString dbPath = dataPath + "/slackship.db";
+    QString dbPath = dataPath + "/lagoon.db";
 
     m_database = QSqlDatabase::addDatabase("QSQLITE");
     m_database.setDatabaseName(dbPath);

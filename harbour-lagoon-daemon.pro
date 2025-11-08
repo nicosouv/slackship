@@ -1,4 +1,4 @@
-TARGET = harbour-slackship-daemon
+TARGET = harbour-lagoon-daemon
 
 CONFIG += console
 CONFIG -= app_bundle
@@ -32,10 +32,10 @@ target.path = /usr/bin
 
 # Systemd service file
 systemd.path = /usr/lib/systemd/user
-systemd.files = daemon/harbour-slackship-daemon.service
+systemd.files = daemon/harbour-lagoon-daemon.service
 
 # D-Bus service file
 dbus.path = /usr/share/dbus-1/services
-dbus.files = daemon/org.harbour.slackship.service
+dbus.files = daemon/org.harbour.lagoon.service
 
 INSTALLS += target systemd dbus

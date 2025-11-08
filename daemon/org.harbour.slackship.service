@@ -1,5 +1,0 @@
-[D-BUS Service]
-Name=org.harbour.slackship
-Exec=/usr/bin/harbour-slackship-daemon
-User=nemo
-SystemdService=harbour-slackship-daemon.service

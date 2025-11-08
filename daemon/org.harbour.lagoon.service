@@ -1,0 +1,5 @@
+[D-BUS Service]
+Name=org.harbour.lagoon
+Exec=/usr/bin/harbour-lagoon-daemon
+User=nemo
+SystemdService=harbour-lagoon-daemon.service

@@ -259,7 +259,7 @@ QByteArray FileManager::createMultipartData(const QString &filePath,
                                            const QString &comment,
                                            QByteArray &boundary)
 {
-    boundary = "----SlackShipBoundary" + QByteArray::number(qrand());
+    boundary = "----LagoonBoundary" + QByteArray::number(qrand());
 
     QByteArray data;
     data.append("--" + boundary + "\r\n");

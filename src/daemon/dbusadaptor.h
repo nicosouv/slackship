@@ -8,7 +8,7 @@
 class DBusAdaptor : public QDBusAbstractAdaptor
 {
     Q_OBJECT
-    Q_CLASSINFO("D-Bus Interface", "org.harbour.slackship")
+    Q_CLASSINFO("D-Bus Interface", "org.harbour.lagoon")
 
 public:
     explicit DBusAdaptor(SlackShipDaemon *daemon);

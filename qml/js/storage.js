@@ -1,4 +1,4 @@
-// Local storage utilities for SlackShip
+// Local storage utilities for Lagoon
 
 .pragma library
 

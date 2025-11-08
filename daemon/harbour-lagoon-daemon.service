@@ -1,11 +1,11 @@
 [Unit]
-Description=SlackShip Background Daemon
+Description=Lagoon Background Daemon
 After=network.target dbus.service
 
 [Service]
 Type=dbus
-BusName=org.harbour.slackship
-ExecStart=/usr/bin/harbour-slackship-daemon
+BusName=org.harbour.lagoon
+ExecStart=/usr/bin/harbour-lagoon-daemon
 Restart=on-failure
 RestartSec=10
 
