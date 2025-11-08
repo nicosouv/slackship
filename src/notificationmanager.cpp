@@ -170,17 +170,12 @@ void NotificationManager::showNotification(const QString &summary,
     // Set timestamp (current time - could be message timestamp if available)
     notification->setTimestamp(QDateTime::currentDateTime());
 
-    // Connect signals BEFORE setting actions
+    // Connect signals
+    // The notification is automatically clickable when appName matches the .desktop file
     connect(notification, &Notification::closed,
             this, &NotificationManager::handleNotificationClosed);
     connect(notification, &Notification::actionInvoked,
             this, &NotificationManager::handleActionInvoked);
-
-    // Add a default action to make notification clickable
-    // When user taps the notification, it will invoke the "default" action
-    QStringList actions;
-    actions << "default" << "Open";
-    notification->setActions(actions);
 
     // Publish notification
     qDebug() << "About to call notification->publish()";
