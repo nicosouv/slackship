@@ -20,6 +20,7 @@ public slots:
     // Conversations
     void cacheConversation(const QJsonObject &conversation);
     QJsonArray getCachedConversations();
+    QJsonObject getCachedConversation(const QString &channelId);
     void clearConversations();
 
     // Messages

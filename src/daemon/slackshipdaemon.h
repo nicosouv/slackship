@@ -21,6 +21,10 @@ public:
     void start();
     void stop();
 
+    // Status getters
+    bool isConnected() const { return m_isConnected; }
+    int getTotalUnreadCount() const;
+
 public slots:
     // D-Bus exposed methods
     void syncNow();

@@ -274,8 +274,15 @@ void SlackShipDaemon::processIncomingMessage(const QJsonObject &message)
     // But we'll trigger it here too for daemon context
     bool isMention = text.contains("@");
 
-    // Get channel name from cache or API
-    QString channelName = channelId; // TODO: Resolve from cache
+    // Get channel name from cache
+    QString channelName = channelId; // Default to ID if cache fails
+    QJsonObject cachedChannel = m_cacheManager->getCachedConversation(channelId);
+    if (!cachedChannel.isEmpty()) {
+        channelName = cachedChannel["name"].toString();
+        if (channelName.isEmpty()) {
+            channelName = channelId;
+        }
+    }
 
     if (isMention) {
         m_notificationManager->showMentionNotification(channelName, userId, text, channelId);
@@ -300,6 +307,15 @@ void SlackShipDaemon::saveMessageToCache(const QJsonObject &message)
 }
 
 int SlackShipDaemon::calculateTotalUnread()
+{
+    int total = 0;
+    for (int count : m_unreadCounts.values()) {
+        total += count;
+    }
+    return total;
+}
+
+int SlackShipDaemon::getTotalUnreadCount() const
 {
     int total = 0;
     for (int count : m_unreadCounts.values()) {

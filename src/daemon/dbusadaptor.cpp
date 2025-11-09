@@ -44,12 +44,10 @@ void DBusAdaptor::SendMessage(const QString &channelId, const QString &text)
 
 bool DBusAdaptor::IsConnected()
 {
-    // TODO: Add isConnected() method to daemon
-    return true; // Placeholder
+    return m_daemon->isConnected();
 }
 
 int DBusAdaptor::GetUnreadCount()
 {
-    // TODO: Add getUnreadCount() method to daemon
-    return 0; // Placeholder
+    return m_daemon->getTotalUnreadCount();
 }

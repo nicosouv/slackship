@@ -6,6 +6,7 @@ Page {
 
     property string imageUrl: ""
     property string title: ""
+    property var copyBanner: null
 
     allowedOrientations: Orientation.All
 
@@ -25,9 +26,30 @@ Page {
             }
 
             MenuItem {
-                text: qsTr("Share")
+                text: qsTr("Copy image URL")
                 onClicked: {
-                    // TODO: Implement share functionality
+                    Clipboard.text = imageUrl
+
+                    // Destroy existing banner if present
+                    if (copyBanner) {
+                        copyBanner.destroy()
+                    }
+
+                    // Create and show banner notification
+                    copyBanner = Qt.createQmlObject(
+                        'import QtQuick 2.0; import Sailfish.Silica 1.0; ' +
+                        'Label { ' +
+                        '    anchors.centerIn: parent; ' +
+                        '    text: qsTr("URL copied to clipboard"); ' +
+                        '    color: Theme.highlightColor; ' +
+                        '    font.pixelSize: Theme.fontSizeLarge; ' +
+                        '    opacity: 1.0; ' +
+                        '    Behavior on opacity { FadeAnimation {} } ' +
+                        '}',
+                        imageViewerPage
+                    )
+
+                    bannerTimer.restart()
                 }
             }
         }
@@ -101,6 +123,25 @@ Page {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    // Timer to hide the copy banner
+    Timer {
+        id: bannerTimer
+        interval: 2000
+        repeat: false
+        onTriggered: {
+            if (copyBanner) {
+                copyBanner.opacity = 0.0
+                // Destroy after fade animation completes
+                Qt.callLater(function() {
+                    if (copyBanner) {
+                        copyBanner.destroy()
+                        copyBanner = null
+                    }
+                })
             }
         }
     }

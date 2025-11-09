@@ -129,6 +129,25 @@ QJsonArray CacheManager::getCachedConversations()
     return result;
 }
 
+QJsonObject CacheManager::getCachedConversation(const QString &channelId)
+{
+    QJsonObject result;
+
+    QSqlQuery query(m_database);
+    query.prepare("SELECT data FROM conversations WHERE id = :id");
+    query.bindValue(":id", channelId);
+
+    if (query.exec() && query.next()) {
+        QString data = query.value(0).toString();
+        QJsonDocument doc = QJsonDocument::fromJson(data.toUtf8());
+        if (doc.isObject()) {
+            result = doc.object();
+        }
+    }
+
+    return result;
+}
+
 void CacheManager::clearConversations()
 {
     QSqlQuery query(m_database);

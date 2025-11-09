@@ -55,7 +55,9 @@ Page {
             MenuItem {
                 text: qsTr("Search")
                 onClicked: {
-                    // TODO: Implement search in conversation
+                    pageStack.push(Qt.resolvedUrl("SearchPage.qml"), {
+                        "searchInChannel": channelName
+                    })
                 }
             }
         }

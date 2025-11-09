@@ -109,8 +109,10 @@ ListItem {
         }
         MenuItem {
             text: qsTr("Mark as read")
+            visible: channelUnreadCount > 0
             onClicked: {
-                // TODO: Implement mark as read
+                conversationModel.updateUnreadCount(channelId, 0)
+                notificationManager.clearChannelNotifications(channelId)
             }
         }
         MenuItem {
