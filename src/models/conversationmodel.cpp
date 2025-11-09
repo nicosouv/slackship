@@ -260,3 +260,29 @@ void ConversationModel::toggleStar(const QString &conversationId)
         emit dataChanged(modelIndex, modelIndex, {IsStarredRole});
     }
 }
+
+QVariantMap ConversationModel::get(int index) const
+{
+    QVariantMap result;
+
+    if (index < 0 || index >= m_conversations.count()) {
+        return result;
+    }
+
+    const Conversation &conv = m_conversations.at(index);
+
+    result["id"] = conv.id;
+    result["name"] = conv.name;
+    result["type"] = conv.type;
+    result["isPrivate"] = conv.isPrivate;
+    result["isMember"] = conv.isMember;
+    result["unreadCount"] = conv.unreadCount;
+    result["lastMessage"] = conv.lastMessage;
+    result["lastMessageTime"] = conv.lastMessageTime;
+    result["topic"] = conv.topic;
+    result["purpose"] = conv.purpose;
+    result["userId"] = conv.userId;
+    result["isStarred"] = conv.isStarred;
+
+    return result;
+}

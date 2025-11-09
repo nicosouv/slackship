@@ -43,6 +43,9 @@ public slots:
     Q_INVOKABLE int publicChannelCount() const;
     Q_INVOKABLE int privateChannelCount() const;
 
+    // QML helper to get conversation data by index
+    Q_INVOKABLE QVariantMap get(int index) const;
+
 private:
     struct Conversation {
         QString id;
