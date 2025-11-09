@@ -16,6 +16,7 @@
 #include "filemanager.h"
 #include "oauthmanager.h"
 #include "statsmanager.h"
+#include "updatechecker.h"
 #include "dbusinterface.h"
 #include "models/conversationmodel.h"
 #include "models/messagemodel.h"
@@ -67,6 +68,7 @@ int main(int argc, char *argv[])
     FileManager *fileManager = new FileManager(app.data());
     OAuthManager *oauthManager = new OAuthManager(app.data());
     StatsManager *statsManager = new StatsManager(app.data());
+    UpdateChecker *updateChecker = new UpdateChecker(app.data());
 
     // Create DBus interface for notification clicks
     DBusInterface *dbusInterface = new DBusInterface(app.data());
@@ -206,11 +208,15 @@ int main(int argc, char *argv[])
     context->setContextProperty("fileManager", fileManager);
     context->setContextProperty("oauthManager", oauthManager);
     context->setContextProperty("statsManager", statsManager);
+    context->setContextProperty("updateChecker", updateChecker);
     context->setContextProperty("dbusAdaptor", dbusAdaptor);
     context->setContextProperty("conversationModel", conversationModel);
     context->setContextProperty("messageModel", messageModel);
     context->setContextProperty("userModel", userModel);
     context->setContextProperty("appSettings", settings);
+
+    // Check for updates once on startup
+    updateChecker->checkForUpdates();
 
     view->setSource(SailfishApp::pathTo("qml/harbour-lagoon.qml"));
     view->show();

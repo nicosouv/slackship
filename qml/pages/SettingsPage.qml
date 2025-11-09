@@ -299,7 +299,7 @@ Page {
             Label {
                 x: Theme.horizontalPageMargin
                 width: parent.width - 2 * Theme.horizontalPageMargin
-                text: "Lagoon v0.25.1"
+                text: "Lagoon v0.26.0"
                 color: Theme.highlightColor
             }
 
@@ -310,6 +310,49 @@ Page {
                 color: Theme.secondaryColor
                 font.pixelSize: Theme.fontSizeSmall
                 wrapMode: Text.WordWrap
+            }
+
+            // Update notification
+            BackgroundItem {
+                width: parent.width
+                height: updateColumn.height + Theme.paddingLarge * 2
+                visible: updateChecker.updateAvailable
+
+                onClicked: {
+                    Qt.openUrlExternally(updateChecker.releaseUrl)
+                }
+
+                Column {
+                    id: updateColumn
+                    anchors.centerIn: parent
+                    width: parent.width - 2 * Theme.horizontalPageMargin
+                    spacing: Theme.paddingSmall
+
+                    Label {
+                        width: parent.width
+                        text: qsTr("Update available: v%1").arg(updateChecker.latestVersion)
+                        color: Theme.highlightColor
+                        font.pixelSize: Theme.fontSizeSmall
+                        font.bold: true
+                        horizontalAlignment: Text.AlignHCenter
+                    }
+
+                    Label {
+                        width: parent.width
+                        text: qsTr("Tap to view release on GitHub")
+                        color: Theme.secondaryHighlightColor
+                        font.pixelSize: Theme.fontSizeExtraSmall
+                        horizontalAlignment: Text.AlignHCenter
+                    }
+                }
+            }
+
+            // Manual check button
+            Button {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: updateChecker.checking ? qsTr("Checking...") : qsTr("Check for updates")
+                enabled: !updateChecker.checking
+                onClicked: updateChecker.checkForUpdates()
             }
         }
 

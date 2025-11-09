@@ -31,6 +31,7 @@ SOURCES += \
     src/dbusinterface.cpp \
     src/oauthmanager.cpp \
     src/statsmanager.cpp \
+    src/updatechecker.cpp \
     src/models/conversationmodel.cpp \
     src/models/messagemodel.cpp \
     src/models/usermodel.cpp \
@@ -48,6 +49,7 @@ HEADERS += \
     src/dbusinterface.h \
     src/oauthmanager.h \
     src/statsmanager.h \
+    src/updatechecker.h \
     src/models/conversationmodel.h \
     src/models/messagemodel.h \
     src/models/usermodel.h \
