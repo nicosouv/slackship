@@ -7,6 +7,13 @@ ListItem {
     id: messageItem
     contentHeight: messageColumn.height + Theme.paddingMedium * 2
 
+    // Store model properties in local variables to avoid ambiguity in nested components
+    property var messageReactions: model.reactions || []
+    property var messageAttachments: model.attachments || []
+    property var messageFiles: model.files || []
+    property string messageChannelId: model.channelId || ""
+    property string messageTimestamp: model.timestamp || ""
+
     // Highlight parent message in threads
     Rectangle {
         anchors.fill: parent
@@ -212,7 +219,7 @@ ListItem {
                 visible: model.reactions && model.reactions.length > 0
 
                 Repeater {
-                    model: messageItem.model.reactions || []
+                    model: messageReactions
 
                     delegate: BackgroundItem {
                         width: reactionRow.width + Theme.paddingMedium * 2
@@ -273,9 +280,9 @@ ListItem {
 
                             // Toggle: remove if already reacted, add if not
                             if (hasReacted) {
-                                slackAPI.removeReaction(model.channelId, model.timestamp, modelData.name)
+                                slackAPI.removeReaction(messageChannelId, messageTimestamp, modelData.name)
                             } else {
-                                slackAPI.addReaction(model.channelId, model.timestamp, modelData.name)
+                                slackAPI.addReaction(messageChannelId, messageTimestamp, modelData.name)
                             }
                         }
                     }
@@ -284,7 +291,7 @@ ListItem {
 
             // Image attachments
             Repeater {
-                model: messageItem.model.attachments || []
+                model: messageAttachments
 
                 delegate: Loader {
                     width: messageColumn.width
@@ -304,7 +311,7 @@ ListItem {
 
             // Files (uploaded images, documents, etc.)
             Repeater {
-                model: messageItem.model.files || []
+                model: messageFiles
 
                 delegate: Loader {
                     width: messageColumn.width
@@ -417,7 +424,7 @@ ListItem {
                 dialog.accepted.connect(function() {
                     // Convert Unicode emoji to Slack reaction name
                     var reactionName = EmojiHelper.emojiToReactionName(dialog.selectedEmoji)
-                    slackAPI.addReaction(model.channelId, model.timestamp, reactionName)
+                    slackAPI.addReaction(messageChannelId, messageTimestamp, reactionName)
                 })
             }
         }
