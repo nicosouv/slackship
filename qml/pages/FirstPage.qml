@@ -10,11 +10,7 @@ Page {
     allowedOrientations: Orientation.All
 
     property bool isLoading: false
-
-    // Track expanded state for sections
-    property bool channelsExpanded: appSettings.channelsSectionExpanded
-    property bool dmsExpanded: appSettings.dmsSectionExpanded
-    property bool groupsExpanded: appSettings.groupsSectionExpanded
+    property string searchText: ""
 
     Component.onCompleted: {
         console.log("FirstPage loaded - fetching conversations")
@@ -58,73 +54,16 @@ Page {
         slackAPI.fetchUsers()
     }
 
-    // Filter conversations by type
-    function filterConversationsByType(type, forceShow) {
-        var result = []
-        for (var i = 0; i < conversationModel.rowCount(); i++) {
-            var item = conversationModel.get(i)
-
-            // Normalize type matching
-            var itemType = item.type
-            var matches = false
-
-            if (type === "channel") {
-                matches = (itemType === "channel" || itemType === "group")
-            } else if (type === "im") {
-                matches = (itemType === "im")
-            } else if (type === "mpim") {
-                matches = (itemType === "mpim")
-            }
-
-            if (matches) {
-                // Always show if: unread messages, starred, or section is expanded
-                if (forceShow || item.unreadCount > 0 || item.isStarred) {
-                    result.push(item)
-                }
-            }
-        }
-        return result
+    // Filter conversations by search text
+    function matchesSearch(name) {
+        if (searchText.length === 0) return true
+        return name.toLowerCase().indexOf(searchText.toLowerCase()) >= 0
     }
 
-    // Count conversations by type
-    function countByType(type) {
-        var count = 0
-        for (var i = 0; i < conversationModel.rowCount(); i++) {
-            var item = conversationModel.get(i)
-            var itemType = item.type
-
-            if (type === "channel" && (itemType === "channel" || itemType === "group")) {
-                count++
-            } else if (type === "im" && itemType === "im") {
-                count++
-            } else if (type === "mpim" && itemType === "mpim") {
-                count++
-            }
-        }
-        return count
-    }
-
-    // Count unread by type
-    function countUnreadByType(type) {
-        var count = 0
-        for (var i = 0; i < conversationModel.rowCount(); i++) {
-            var item = conversationModel.get(i)
-            var itemType = item.type
-
-            if (type === "channel" && (itemType === "channel" || itemType === "group")) {
-                if (item.unreadCount > 0) count++
-            } else if (type === "im" && itemType === "im") {
-                if (item.unreadCount > 0) count++
-            } else if (type === "mpim" && itemType === "mpim") {
-                if (item.unreadCount > 0) count++
-            }
-        }
-        return count
-    }
-
-    SilicaFlickable {
+    SilicaListView {
+        id: conversationListView
         anchors.fill: parent
-        contentHeight: contentColumn.height + header.height
+        model: conversationModel
 
         PullDownMenu {
             MenuItem {
@@ -145,203 +84,50 @@ Page {
                 onClicked: pageStack.push(Qt.resolvedUrl("BrowseChannelsPage.qml"))
             }
             MenuItem {
-                text: qsTr("Search")
-                onClicked: pageStack.push(Qt.resolvedUrl("SearchPage.qml"))
-            }
-            MenuItem {
                 text: qsTr("Refresh")
                 onClicked: slackAPI.fetchConversations()
             }
         }
 
-        PageHeader {
-            id: header
-            title: slackAPI.workspaceName || "Lagoon"
-            description: slackAPI.isAuthenticated ? qsTr("Connected") : qsTr("Disconnected")
-        }
-
-        Column {
-            id: contentColumn
-            anchors.top: header.bottom
+        header: Column {
             width: parent.width
 
-            // Channels Section
-            ExpandingSection {
-                id: channelsSection
-                width: parent.width
-                title: qsTr("Channels") + " (" + countByType("channel") + ")"
-                expanded: channelsExpanded
-
-                content.sourceComponent: Column {
-                    width: channelsSection.width
-
-                    Repeater {
-                        model: conversationModel
-
-                        delegate: ChannelDelegate {
-                            width: channelsSection.width
-
-                            // Filter: only show if type matches AND (expanded OR has unreads OR starred)
-                            visible: {
-                                var isChannel = (type === "channel" || type === "group")
-                                if (!isChannel) return false
-
-                                // Show if section expanded OR has unread messages OR is starred
-                                return channelsExpanded || unreadCount > 0 || isStarred
-                            }
-
-                            height: visible ? implicitHeight : 0
-
-                            onClicked: {
-                                console.log("Channel clicked:", name, id)
-
-                                // Mark channel as read (clear unread count)
-                                conversationModel.updateUnreadCount(id, 0)
-
-                                // Clear notifications for this channel
-                                notificationManager.clearChannelNotifications(id)
-
-                                // Set current channel ID
-                                messageModel.currentChannelId = id
-
-                                // Fetch messages for this channel
-                                slackAPI.fetchConversationHistory(id)
-
-                                // Navigate to conversation page
-                                pageStack.push(Qt.resolvedUrl("ConversationPage.qml"), {
-                                    "channelId": id,
-                                    "channelName": name
-                                })
-                            }
-                        }
-                    }
-
-                    Label {
-                        width: parent.width
-                        horizontalAlignment: Text.AlignHCenter
-                        text: qsTr("No channels")
-                        color: Theme.secondaryColor
-                        font.pixelSize: Theme.fontSizeSmall
-                        visible: countByType("channel") === 0
-                        height: visible ? implicitHeight + Theme.paddingLarge * 2 : 0
-                    }
-                }
-
-                onExpandedChanged: {
-                    channelsExpanded = expanded
-                    appSettings.channelsSectionExpanded = expanded
-                }
+            PageHeader {
+                title: slackAPI.workspaceName || "Lagoon"
+                description: slackAPI.isAuthenticated ? qsTr("Connected") : qsTr("Disconnected")
             }
 
-            // Direct Messages Section
-            ExpandingSection {
-                id: dmsSection
+            SearchField {
+                id: searchField
                 width: parent.width
-                title: qsTr("Direct Messages") + " (" + countByType("im") + ")"
-                expanded: dmsExpanded
+                placeholderText: qsTr("Filter conversations...")
+                onTextChanged: searchText = text
 
-                content.sourceComponent: Column {
-                    width: dmsSection.width
-
-                    Repeater {
-                        model: conversationModel
-
-                        delegate: ChannelDelegate {
-                            width: dmsSection.width
-
-                            // Filter: only show if type is "im" AND (expanded OR has unreads OR starred)
-                            visible: {
-                                var isDM = (type === "im")
-                                if (!isDM) return false
-
-                                // Show if section expanded OR has unread messages OR is starred
-                                return dmsExpanded || unreadCount > 0 || isStarred
-                            }
-
-                            height: visible ? implicitHeight : 0
-
-                            onClicked: {
-                                console.log("DM clicked:", name, id)
-
-                                conversationModel.updateUnreadCount(id, 0)
-                                notificationManager.clearChannelNotifications(id)
-                                messageModel.currentChannelId = id
-                                slackAPI.fetchConversationHistory(id)
-
-                                pageStack.push(Qt.resolvedUrl("ConversationPage.qml"), {
-                                    "channelId": id,
-                                    "channelName": name
-                                })
-                            }
-                        }
-                    }
-
-                    Label {
-                        width: parent.width
-                        horizontalAlignment: Text.AlignHCenter
-                        text: qsTr("No direct messages")
-                        color: Theme.secondaryColor
-                        font.pixelSize: Theme.fontSizeSmall
-                        visible: countByType("im") === 0
-                        height: visible ? implicitHeight + Theme.paddingLarge * 2 : 0
-                    }
-                }
-
-                onExpandedChanged: {
-                    dmsExpanded = expanded
-                    appSettings.dmsSectionExpanded = expanded
-                }
+                EnterKey.iconSource: "image://theme/icon-m-enter-close"
+                EnterKey.onClicked: focus = false
             }
+        }
 
-            // Group Messages Section
-            ExpandingSection {
-                id: groupsSection
-                width: parent.width
-                title: qsTr("Group Messages") + " (" + countByType("mpim") + ")"
-                expanded: groupsExpanded
-                visible: countByType("mpim") > 0  // Hide section if no group messages
+        delegate: ChannelDelegate {
+            visible: matchesSearch(name)
+            height: visible ? implicitHeight : 0
 
-                content.sourceComponent: Column {
-                    width: groupsSection.width
+            onClicked: {
+                console.log("Conversation clicked:", name, id)
 
-                    Repeater {
-                        model: conversationModel
+                // Mark as read
+                conversationModel.updateUnreadCount(id, 0)
+                notificationManager.clearChannelNotifications(id)
 
-                        delegate: ChannelDelegate {
-                            width: groupsSection.width
+                // Set current channel and fetch messages
+                messageModel.currentChannelId = id
+                slackAPI.fetchConversationHistory(id)
 
-                            // Filter: only show if type is "mpim" AND (expanded OR has unreads OR starred)
-                            visible: {
-                                var isGroupMsg = (type === "mpim")
-                                if (!isGroupMsg) return false
-
-                                // Show if section expanded OR has unread messages OR is starred
-                                return groupsExpanded || unreadCount > 0 || isStarred
-                            }
-
-                            height: visible ? implicitHeight : 0
-
-                            onClicked: {
-                                console.log("Group clicked:", name, id)
-
-                                conversationModel.updateUnreadCount(id, 0)
-                                notificationManager.clearChannelNotifications(id)
-                                messageModel.currentChannelId = id
-                                slackAPI.fetchConversationHistory(id)
-
-                                pageStack.push(Qt.resolvedUrl("ConversationPage.qml"), {
-                                    "channelId": id,
-                                    "channelName": name
-                                })
-                            }
-                        }
-                    }
-                }
-
-                onExpandedChanged: {
-                    groupsExpanded = expanded
-                    appSettings.groupsSectionExpanded = expanded
-                }
+                // Navigate to conversation
+                pageStack.push(Qt.resolvedUrl("ConversationPage.qml"), {
+                    "channelId": id,
+                    "channelName": name
+                })
             }
         }
 
