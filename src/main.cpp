@@ -16,6 +16,7 @@
 #include "filemanager.h"
 #include "oauthmanager.h"
 #include "statsmanager.h"
+#include "dbusinterface.h"
 #include "models/conversationmodel.h"
 #include "models/messagemodel.h"
 #include "models/usermodel.h"
@@ -66,6 +67,10 @@ int main(int argc, char *argv[])
     FileManager *fileManager = new FileManager(app.data());
     OAuthManager *oauthManager = new OAuthManager(app.data());
     StatsManager *statsManager = new StatsManager(app.data());
+
+    // Create DBus interface for notification clicks
+    DBusInterface *dbusInterface = new DBusInterface(app.data());
+    DBusAdaptor *dbusAdaptor = dbusInterface->getDBusAdaptor();
 
     // Create API instance
     SlackAPI *slackAPI = new SlackAPI(app.data());
@@ -209,6 +214,7 @@ int main(int argc, char *argv[])
     context->setContextProperty("fileManager", fileManager);
     context->setContextProperty("oauthManager", oauthManager);
     context->setContextProperty("statsManager", statsManager);
+    context->setContextProperty("dbusAdaptor", dbusAdaptor);
     context->setContextProperty("conversationModel", conversationModel);
     context->setContextProperty("messageModel", messageModel);
     context->setContextProperty("userModel", userModel);

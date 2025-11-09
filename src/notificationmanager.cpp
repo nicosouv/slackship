@@ -160,6 +160,24 @@ void NotificationManager::showNotification(const QString &summary,
     // IMPORTANT: Store channelId as a Qt property so we can retrieve it in handleActionInvoked
     notification->setProperty("channelId", channelId);
 
+    // Set up remote action for notification click
+    // This uses DBus to call openChannel when the notification is clicked
+    QVariantList remoteActionArguments;
+    remoteActionArguments.append(channelId);
+
+    qDebug() << "Setting remote action for channel:" << channelId;
+    notification->setRemoteAction(
+        Notification::remoteAction(
+            "default",                  // action name
+            "openChannel",             // display name
+            "org.lagoon.slackship",    // DBus service name
+            "/org/lagoon/slackship",   // DBus object path
+            "org.lagoon.slackship",    // DBus interface
+            "openChannel",             // DBus method to call
+            remoteActionArguments      // Arguments to pass
+        )
+    );
+
     // Set urgency (higher for mentions)
     if (isMention) {
         notification->setUrgency(Notification::Critical);

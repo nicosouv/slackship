@@ -27,6 +27,8 @@ SOURCES += \
     src/workspacemanager.cpp \
     src/filemanager.cpp \
     src/dbusclient.cpp \
+    src/dbusadaptor.cpp \
+    src/dbusinterface.cpp \
     src/oauthmanager.cpp \
     src/statsmanager.cpp \
     src/models/conversationmodel.cpp \
@@ -42,6 +44,8 @@ HEADERS += \
     src/workspacemanager.h \
     src/filemanager.h \
     src/dbusclient.h \
+    src/dbusadaptor.h \
+    src/dbusinterface.h \
     src/oauthmanager.h \
     src/statsmanager.h \
     src/models/conversationmodel.h \

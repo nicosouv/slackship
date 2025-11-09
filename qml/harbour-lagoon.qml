@@ -113,6 +113,18 @@ ApplicationWindow {
         }
     }
 
+    // DBus connection for notification clicks
+    Connections {
+        target: dbusAdaptor
+
+        onPleaseOpenChannel: {
+            console.log("=== DBUS PLEASE OPEN CHANNEL ===")
+            console.log("Channel ID:", channelId)
+            appWindow.activate()
+            openChannel(channelId)
+        }
+    }
+
     Connections {
         target: slackAPI
 
