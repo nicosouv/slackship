@@ -205,20 +205,19 @@ Page {
             }
 
             SectionHeader {
-                text: qsTr("Insights")
+                text: qsTr("Daily Stats")
             }
 
-            Button {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: qsTr("Reset Statistics")
-                onClicked: {
-                    remorse.execute(qsTr("Resetting all statistics"), function() {
-                        statsManager.resetStats()
-                    })
-                }
+            Label {
+                x: Theme.horizontalPageMargin
+                width: parent.width - 2 * Theme.horizontalPageMargin
+                text: qsTr("Stats are tracked per workspace and reset daily at midnight")
+                color: Theme.secondaryColor
+                font.pixelSize: Theme.fontSizeExtraSmall
+                wrapMode: Text.WordWrap
             }
 
-            // Stats preview
+            // Stats preview - simplified to 2 counters
             BackgroundItem {
                 width: parent.width
                 height: statsPreview.height + Theme.paddingLarge * 2
@@ -228,17 +227,17 @@ Page {
                     id: statsPreview
                     anchors.centerIn: parent
                     width: parent.width - 2 * Theme.horizontalPageMargin
-                    spacing: Theme.paddingMedium
+                    spacing: Theme.paddingLarge
 
                     Row {
                         width: parent.width
                         spacing: Theme.paddingLarge
 
                         Column {
-                            width: (parent.width - parent.spacing * 2) / 3
+                            width: (parent.width - parent.spacing) / 2
                             Label {
                                 width: parent.width
-                                text: statsManager.totalMessages
+                                text: statsManager.todayTotal
                                 font.pixelSize: Theme.fontSizeHuge
                                 font.bold: true
                                 color: Theme.highlightColor
@@ -246,7 +245,7 @@ Page {
                             }
                             Label {
                                 width: parent.width
-                                text: qsTr("Messages")
+                                text: qsTr("Workspace Today")
                                 font.pixelSize: Theme.fontSizeExtraSmall
                                 color: Theme.secondaryColor
                                 horizontalAlignment: Text.AlignHCenter
@@ -254,10 +253,10 @@ Page {
                         }
 
                         Column {
-                            width: (parent.width - parent.spacing * 2) / 3
+                            width: (parent.width - parent.spacing) / 2
                             Label {
                                 width: parent.width
-                                text: statsManager.messagesThisWeek
+                                text: statsManager.todayUser
                                 font.pixelSize: Theme.fontSizeHuge
                                 font.bold: true
                                 color: Theme.highlightColor
@@ -265,26 +264,7 @@ Page {
                             }
                             Label {
                                 width: parent.width
-                                text: qsTr("This Week")
-                                font.pixelSize: Theme.fontSizeExtraSmall
-                                color: Theme.secondaryColor
-                                horizontalAlignment: Text.AlignHCenter
-                            }
-                        }
-
-                        Column {
-                            width: (parent.width - parent.spacing * 2) / 3
-                            Label {
-                                width: parent.width
-                                text: "🔥 " + statsManager.currentStreak
-                                font.pixelSize: Theme.fontSizeHuge
-                                font.bold: true
-                                color: Theme.highlightColor
-                                horizontalAlignment: Text.AlignHCenter
-                            }
-                            Label {
-                                width: parent.width
-                                text: qsTr("Streak")
+                                text: qsTr("Your Messages")
                                 font.pixelSize: Theme.fontSizeExtraSmall
                                 color: Theme.secondaryColor
                                 horizontalAlignment: Text.AlignHCenter
@@ -302,6 +282,16 @@ Page {
                 }
             }
 
+            Button {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: qsTr("Reset Statistics")
+                onClicked: {
+                    remorse.execute(qsTr("Resetting all statistics"), function() {
+                        statsManager.resetStats()
+                    })
+                }
+            }
+
             SectionHeader {
                 text: qsTr("About")
             }
@@ -309,7 +299,7 @@ Page {
             Label {
                 x: Theme.horizontalPageMargin
                 width: parent.width - 2 * Theme.horizontalPageMargin
-                text: "Lagoon v0.24.0"
+                text: "Lagoon v0.25.0"
                 color: Theme.highlightColor
             }
 

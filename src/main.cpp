@@ -83,10 +83,24 @@ int main(int argc, char *argv[])
     // Create settings
     AppSettings *settings = new AppSettings(app.data());
 
-    // Connect workspace manager to API
+    // Connect workspace manager to API and stats
     QObject::connect(workspaceManager, &WorkspaceManager::workspaceSwitched,
-                     slackAPI, [slackAPI](int /*index*/, const QString &token) {
+                     [slackAPI, statsManager](int /*index*/, const QString &token) {
         slackAPI->authenticate(token);
+        // Stats will be updated when teamIdChanged signal is emitted after authentication
+    });
+
+    // Connect stats manager to API for workspace and user tracking
+    QObject::connect(slackAPI, &SlackAPI::teamIdChanged,
+                     statsManager, [statsManager, slackAPI]() {
+        statsManager->setCurrentWorkspace(slackAPI->teamId());
+        qDebug() << "Stats: Set workspace to" << slackAPI->teamId();
+    });
+
+    QObject::connect(slackAPI, &SlackAPI::currentUserChanged,
+                     statsManager, [statsManager, slackAPI]() {
+        statsManager->setCurrentUserId(slackAPI->currentUserId());
+        qDebug() << "Stats: Set user ID to" << slackAPI->currentUserId();
     });
 
     // Connect API to models
@@ -104,7 +118,7 @@ int main(int argc, char *argv[])
         QString userId = message["user"].toString();
         QString text = message["text"].toString();
 
-        // Track message in stats
+        // Track message in stats (simplified)
         statsManager->trackMessage(message);
 
         // Find channel name
@@ -162,29 +176,7 @@ int main(int argc, char *argv[])
         notificationManager->showMessageNotification(channelName, "", body, channelId);
     });
 
-    // Track messages when history is received (only recent messages to avoid performance issues)
-    QObject::connect(slackAPI, &SlackAPI::messagesReceived,
-                     [statsManager](const QJsonArray &messages) {
-        QDateTime thirtyDaysAgo = QDateTime::currentDateTime().addDays(-30);
-        int trackedCount = 0;
-
-        for (const QJsonValue &value : messages) {
-            if (value.isObject()) {
-                QJsonObject message = value.toObject();
-
-                // Only track messages from the last 30 days to avoid performance issues
-                double tsDouble = message["ts"].toString().toDouble();
-                QDateTime messageTime = QDateTime::fromMSecsSinceEpoch(static_cast<qint64>(tsDouble * 1000));
-
-                if (messageTime >= thirtyDaysAgo) {
-                    statsManager->trackMessage(message);
-                    trackedCount++;
-                }
-            }
-        }
-
-        qDebug() << "Tracked" << trackedCount << "recent messages out of" << messages.count() << "total";
-    });
+    // Note: We don't track message history anymore to keep stats simple and daily-only
 
     // Connect notification manager to file manager
     QObject::connect(notificationManager, &NotificationManager::enabledChanged,

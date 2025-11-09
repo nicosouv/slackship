@@ -1,8 +1,6 @@
 #include "statsmanager.h"
 #include <QSettings>
-#include <QRegularExpression>
 #include <QDebug>
-#include <algorithm>
 
 StatsManager::StatsManager(QObject *parent)
     : QObject(parent)
@@ -15,471 +13,198 @@ StatsManager::~StatsManager()
     saveStats();
 }
 
+int StatsManager::todayTotal() const
+{
+    if (m_currentWorkspaceId.isEmpty()) {
+        return 0;
+    }
+
+    if (!m_workspaceStats.contains(m_currentWorkspaceId)) {
+        return 0;
+    }
+
+    return m_workspaceStats[m_currentWorkspaceId].totalMessages;
+}
+
+int StatsManager::todayUser() const
+{
+    if (m_currentWorkspaceId.isEmpty()) {
+        return 0;
+    }
+
+    if (!m_workspaceStats.contains(m_currentWorkspaceId)) {
+        return 0;
+    }
+
+    return m_workspaceStats[m_currentWorkspaceId].userMessages;
+}
+
 void StatsManager::trackMessage(const QJsonObject &message)
 {
+    // Skip if no workspace set
+    if (m_currentWorkspaceId.isEmpty()) {
+        qDebug() << "StatsManager: No workspace set, ignoring message";
+        return;
+    }
+
+    // Check and reset daily stats if needed
+    checkAndResetDaily();
+
+    // Get current workspace stats
+    DailyStats &stats = getCurrentStats();
+
+    // Get message info
     QString userId = message["user"].toString();
-    QString channelId = message["channel"].toString();
-    QString text = message["text"].toString();
-    QString threadTs = message["thread_ts"].toString();
-    int replyCount = message["reply_count"].toInt();
 
-    // Thread parent: has reply_count > 0
-    // Thread reply: has thread_ts and it's different from message ts
-    bool isThreadParent = replyCount > 0;
-    bool isThreadReply = !threadTs.isEmpty() && message["ts"].toString() != threadTs;
-
-    qDebug() << "=== trackMessage called ===";
-    qDebug() << "channelId:" << channelId << "| userId:" << userId;
-    qDebug() << "text:" << text.left(50);
-    qDebug() << "threadTs:" << threadTs << "| replyCount:" << replyCount;
-    qDebug() << "isThreadParent:" << isThreadParent << "| isThreadReply:" << isThreadReply;
-
-    // Get timestamp (Qt 5.6 compatible - use fromMSecsSinceEpoch instead of fromSecsSinceEpoch)
-    double tsDouble = message["ts"].toString().toDouble();
-    QDateTime messageTime = QDateTime::fromMSecsSinceEpoch(static_cast<qint64>(tsDouble * 1000));
-
-    // Update total messages
-    m_stats.totalMessages++;
-
-    // Update weekly/monthly counts
-    QDateTime now = QDateTime::currentDateTime();
-    qint64 daysAgo = messageTime.daysTo(now);
-
-    if (daysAgo <= 7) {
-        m_stats.messagesThisWeek++;
-    }
-    if (daysAgo <= 30) {
-        m_stats.messagesThisMonth++;
+    // Skip bot messages
+    if (message["bot_id"].toString().length() > 0) {
+        return;
     }
 
-    // Track first/last message today
-    QDate today = QDate::currentDate();
-    if (messageTime.date() == today) {
-        if (!m_stats.firstMessageToday.isValid() || messageTime < m_stats.firstMessageToday) {
-            m_stats.firstMessageToday = messageTime;
-        }
-        if (!m_stats.lastMessageToday.isValid() || messageTime > m_stats.lastMessageToday) {
-            m_stats.lastMessageToday = messageTime;
-        }
+    // Increment total messages for workspace
+    stats.totalMessages++;
+
+    // Increment user messages if it's from current user
+    if (!userId.isEmpty() && userId == stats.currentUserId) {
+        stats.userMessages++;
     }
-
-    // Track threads
-    if (isThreadParent) {
-        m_stats.threadsStarted++;
-        qDebug() << "Thread parent detected! threadsStarted now:" << m_stats.threadsStarted;
-    } else if (isThreadReply) {
-        m_stats.threadReplies++;
-        qDebug() << "Thread reply detected! threadReplies now:" << m_stats.threadReplies;
-    }
-
-    // Track channel activity
-    if (!channelId.isEmpty()) {
-        m_stats.channelActivity[channelId]++;
-        qDebug() << "Tracked channel" << channelId << "- now has" << m_stats.channelActivity[channelId] << "messages";
-        qDebug() << "Total channels tracked:" << m_stats.channelActivity.size();
-    } else {
-        qDebug() << "WARNING: channelId is empty, not tracking!";
-    }
-
-    // Track user activity (DMs)
-    if (!userId.isEmpty()) {
-        m_stats.userActivity[userId]++;
-    }
-
-    // Track hourly activity
-    int hour = messageTime.time().hour();
-    m_hourlyActivity[hour]++;
-
-    // Track daily activity
-    QDate date = messageTime.date();
-    m_dailyActivity[date]++;
-
-    // Extract and count emojis
-    extractEmojis(text);
-
-    // Update streak
-    updateStreak(messageTime);
 
     emit statsChanged();
 
-    // Auto-save periodically (every 10 messages)
-    if (m_stats.totalMessages % 10 == 0) {
+    // Auto-save every 10 messages
+    if (stats.totalMessages % 10 == 0) {
+        saveStats();
+    }
+
+    qDebug() << "StatsManager: Tracked message -"
+             << "Total today:" << stats.totalMessages
+             << "User today:" << stats.userMessages;
+}
+
+void StatsManager::setCurrentUserId(const QString &userId)
+{
+    if (m_currentWorkspaceId.isEmpty()) {
+        return;
+    }
+
+    DailyStats &stats = getCurrentStats();
+    stats.currentUserId = userId;
+
+    qDebug() << "StatsManager: Set current user ID to" << userId
+             << "for workspace" << m_currentWorkspaceId;
+}
+
+void StatsManager::setCurrentWorkspace(const QString &workspaceId)
+{
+    if (workspaceId == m_currentWorkspaceId) {
+        return;
+    }
+
+    m_currentWorkspaceId = workspaceId;
+
+    // Initialize workspace stats if needed
+    if (!m_workspaceStats.contains(workspaceId)) {
+        DailyStats stats;
+        stats.date = QDate::currentDate();
+        m_workspaceStats[workspaceId] = stats;
+    }
+
+    qDebug() << "StatsManager: Switched to workspace" << workspaceId;
+    emit statsChanged();
+}
+
+void StatsManager::checkAndResetDaily()
+{
+    if (m_currentWorkspaceId.isEmpty()) {
+        return;
+    }
+
+    DailyStats &stats = getCurrentStats();
+    QDate today = QDate::currentDate();
+
+    // If the date has changed, reset stats for this workspace
+    if (stats.date != today) {
+        qDebug() << "StatsManager: New day detected! Resetting daily stats for workspace"
+                 << m_currentWorkspaceId;
+        qDebug() << "  Previous date:" << stats.date.toString()
+                 << "| Today:" << today.toString();
+
+        QString savedUserId = stats.currentUserId;  // Preserve user ID
+        stats = DailyStats();
+        stats.date = today;
+        stats.currentUserId = savedUserId;
+
+        emit statsChanged();
         saveStats();
     }
 }
 
-void StatsManager::trackReaction(const QString &emoji)
+DailyStats& StatsManager::getCurrentStats()
 {
-    if (!emoji.isEmpty()) {
-        m_stats.reactionReceived[emoji]++;
-        emit statsChanged();
-    }
-}
-
-void StatsManager::updateStreak(const QDateTime &messageTime)
-{
-    QDate messageDate = messageTime.date();
-    QDate today = QDate::currentDate();
-
-    // Only update streak for messages from today or yesterday (ignore old history)
-    if (messageDate < today.addDays(-1)) {
-        return;
+    // Ensure workspace exists
+    if (!m_workspaceStats.contains(m_currentWorkspaceId)) {
+        DailyStats stats;
+        stats.date = QDate::currentDate();
+        m_workspaceStats[m_currentWorkspaceId] = stats;
     }
 
-    if (!m_stats.lastMessageDate.isValid()) {
-        // First message ever
-        m_stats.currentStreak = 1;
-        m_stats.lastMessageDate = messageTime;
-        return;
-    }
-
-    QDate lastDate = m_stats.lastMessageDate.date();
-
-    if (messageDate == today) {
-        // Message today
-        if (lastDate == today.addDays(-1)) {
-            // Continue streak from yesterday
-            m_stats.currentStreak++;
-            m_stats.lastMessageDate = messageTime;
-        } else if (lastDate == today) {
-            // Already counted today, just update timestamp
-            m_stats.lastMessageDate = messageTime;
-        } else {
-            // Broke streak, start new
-            m_stats.currentStreak = 1;
-            m_stats.lastMessageDate = messageTime;
-        }
-    } else if (messageDate == today.addDays(-1) && lastDate < messageDate) {
-        // Message from yesterday
-        if (lastDate == today.addDays(-2)) {
-            // Continue streak
-            m_stats.currentStreak++;
-        } else {
-            // Start new streak
-            m_stats.currentStreak = 1;
-        }
-        m_stats.lastMessageDate = messageTime;
-    }
-}
-
-void StatsManager::extractEmojis(const QString &text)
-{
-    // Extract :emoji_name: format
-    QRegularExpression emojiRegex(":([a-z0-9_+-]+):");
-    QRegularExpressionMatchIterator matches = emojiRegex.globalMatch(text);
-
-    int count = 0;
-    while (matches.hasNext()) {
-        QRegularExpressionMatch match = matches.next();
-        QString emoji = match.captured(1);
-        m_stats.emojiUsage[emoji]++;
-        count++;
-        qDebug() << "Found emoji:" << emoji << "- total count now:" << m_stats.emojiUsage[emoji];
-    }
-    if (count > 0) {
-        qDebug() << "Extracted" << count << "emojis from text. Total unique emojis:" << m_stats.emojiUsage.size();
-    }
-}
-
-QString StatsManager::getTopItem(const QHash<QString, int> &hash) const
-{
-    if (hash.isEmpty()) {
-        qDebug() << "getTopItem: hash is empty!";
-        return QString();
-    }
-
-    qDebug() << "getTopItem: hash has" << hash.size() << "items";
-
-    // Find the item with the maximum count
-    QString maxKey;
-    int maxCount = 0;
-    for (auto it = hash.begin(); it != hash.end(); ++it) {
-        qDebug() << "  -" << it.key() << ":" << it.value();
-        if (it.value() > maxCount) {
-            maxCount = it.value();
-            maxKey = it.key();
-        }
-    }
-
-    qDebug() << "getTopItem: returning" << maxKey << "with count" << maxCount;
-    return maxKey;
-}
-
-QString StatsManager::mostActiveChannel() const
-{
-    qDebug() << "mostActiveChannel() called - channelActivity has" << m_stats.channelActivity.size() << "channels";
-    QString result = getTopItem(m_stats.channelActivity);
-    qDebug() << "mostActiveChannel() returning:" << result;
-    return result;
-}
-
-QString StatsManager::mostUsedEmoji() const
-{
-    qDebug() << "mostUsedEmoji() called - emojiUsage has" << m_stats.emojiUsage.size() << "emojis";
-    QString result = getTopItem(m_stats.emojiUsage);
-    qDebug() << "mostUsedEmoji() returning:" << result;
-    return result;
-}
-
-QString StatsManager::mostContactedUser() const
-{
-    return getTopItem(m_stats.userActivity);
-}
-
-QVariantMap StatsManager::getChannelStats()
-{
-    QVariantMap result;
-    QVariantList channels;
-
-    // Convert to list and sort by count
-    QList<QPair<QString, int>> sortedChannels;
-    for (auto it = m_stats.channelActivity.begin(); it != m_stats.channelActivity.end(); ++it) {
-        sortedChannels.append(qMakePair(it.key(), it.value()));
-    }
-
-    std::sort(sortedChannels.begin(), sortedChannels.end(),
-              [](const QPair<QString, int> &a, const QPair<QString, int> &b) {
-        return a.second > b.second;
-    });
-
-    // Take top 10
-    for (int i = 0; i < qMin(10, sortedChannels.size()); ++i) {
-        QVariantMap channel;
-        channel["id"] = sortedChannels[i].first;
-        channel["count"] = sortedChannels[i].second;
-        channels.append(channel);
-    }
-
-    result["channels"] = channels;
-    return result;
-}
-
-QVariantMap StatsManager::getUserStats()
-{
-    QVariantMap result;
-    QVariantList users;
-
-    QList<QPair<QString, int>> sortedUsers;
-    for (auto it = m_stats.userActivity.begin(); it != m_stats.userActivity.end(); ++it) {
-        sortedUsers.append(qMakePair(it.key(), it.value()));
-    }
-
-    std::sort(sortedUsers.begin(), sortedUsers.end(),
-              [](const QPair<QString, int> &a, const QPair<QString, int> &b) {
-        return a.second > b.second;
-    });
-
-    for (int i = 0; i < qMin(10, sortedUsers.size()); ++i) {
-        QVariantMap user;
-        user["id"] = sortedUsers[i].first;
-        user["count"] = sortedUsers[i].second;
-        users.append(user);
-    }
-
-    result["users"] = users;
-    return result;
-}
-
-QVariantMap StatsManager::getEmojiStats()
-{
-    QVariantMap result;
-    QVariantList emojis;
-
-    QList<QPair<QString, int>> sortedEmojis;
-    for (auto it = m_stats.emojiUsage.begin(); it != m_stats.emojiUsage.end(); ++it) {
-        sortedEmojis.append(qMakePair(it.key(), it.value()));
-    }
-
-    std::sort(sortedEmojis.begin(), sortedEmojis.end(),
-              [](const QPair<QString, int> &a, const QPair<QString, int> &b) {
-        return a.second > b.second;
-    });
-
-    for (int i = 0; i < qMin(10, sortedEmojis.size()); ++i) {
-        QVariantMap emoji;
-        emoji["name"] = sortedEmojis[i].first;
-        emoji["count"] = sortedEmojis[i].second;
-        emojis.append(emoji);
-    }
-
-    result["emojis"] = emojis;
-    return result;
-}
-
-QVariantMap StatsManager::getActivityByHour()
-{
-    QVariantMap result;
-    QVariantList hours;
-
-    for (int h = 0; h < 24; ++h) {
-        QVariantMap hour;
-        hour["hour"] = h;
-        hour["count"] = m_hourlyActivity.value(h, 0);
-        hours.append(hour);
-    }
-
-    result["hours"] = hours;
-    return result;
-}
-
-QVariantMap StatsManager::getWeeklyActivity()
-{
-    QVariantMap result;
-    QVariantList days;
-
-    QDate today = QDate::currentDate();
-    for (int i = 6; i >= 0; --i) {
-        QDate date = today.addDays(-i);
-        QVariantMap day;
-        day["date"] = date.toString("yyyy-MM-dd");
-        day["count"] = m_dailyActivity.value(date, 0);
-        days.append(day);
-    }
-
-    result["days"] = days;
-    return result;
+    return m_workspaceStats[m_currentWorkspaceId];
 }
 
 void StatsManager::loadStats()
 {
     QSettings settings("harbour-lagoon", "stats");
 
-    m_stats.totalMessages = settings.value("totalMessages", 0).toInt();
-    m_stats.messagesThisWeek = settings.value("messagesThisWeek", 0).toInt();
-    m_stats.messagesThisMonth = settings.value("messagesThisMonth", 0).toInt();
-    m_stats.threadsStarted = settings.value("threadsStarted", 0).toInt();
-    m_stats.threadReplies = settings.value("threadReplies", 0).toInt();
-    m_stats.currentStreak = settings.value("currentStreak", 0).toInt();
-    m_stats.lastMessageDate = settings.value("lastMessageDate").toDateTime();
-
-    // Load channel activity
-    int channelActivitySize = settings.beginReadArray("channelActivity");
-    for (int i = 0; i < channelActivitySize; ++i) {
+    int workspaceCount = settings.beginReadArray("workspaces");
+    for (int i = 0; i < workspaceCount; ++i) {
         settings.setArrayIndex(i);
-        QString channelId = settings.value("channelId").toString();
-        int count = settings.value("count").toInt();
-        m_stats.channelActivity[channelId] = count;
+
+        QString workspaceId = settings.value("workspaceId").toString();
+        DailyStats stats;
+        stats.date = settings.value("date").toDate();
+        stats.totalMessages = settings.value("totalMessages", 0).toInt();
+        stats.userMessages = settings.value("userMessages", 0).toInt();
+        stats.currentUserId = settings.value("currentUserId").toString();
+
+        m_workspaceStats[workspaceId] = stats;
     }
     settings.endArray();
 
-    // Load user activity
-    int userActivitySize = settings.beginReadArray("userActivity");
-    for (int i = 0; i < userActivitySize; ++i) {
-        settings.setArrayIndex(i);
-        QString userId = settings.value("userId").toString();
-        int count = settings.value("count").toInt();
-        m_stats.userActivity[userId] = count;
-    }
-    settings.endArray();
+    m_currentWorkspaceId = settings.value("currentWorkspaceId").toString();
 
-    // Load emoji usage
-    int emojiUsageSize = settings.beginReadArray("emojiUsage");
-    for (int i = 0; i < emojiUsageSize; ++i) {
-        settings.setArrayIndex(i);
-        QString emoji = settings.value("emoji").toString();
-        int count = settings.value("count").toInt();
-        m_stats.emojiUsage[emoji] = count;
-    }
-    settings.endArray();
-
-    // Load hourly activity
-    int hourlyActivitySize = settings.beginReadArray("hourlyActivity");
-    for (int i = 0; i < hourlyActivitySize; ++i) {
-        settings.setArrayIndex(i);
-        int hour = settings.value("hour").toInt();
-        int count = settings.value("count").toInt();
-        m_hourlyActivity[hour] = count;
-    }
-    settings.endArray();
-
-    // Load daily activity
-    int dailyActivitySize = settings.beginReadArray("dailyActivity");
-    for (int i = 0; i < dailyActivitySize; ++i) {
-        settings.setArrayIndex(i);
-        QDate date = settings.value("date").toDate();
-        int count = settings.value("count").toInt();
-        m_dailyActivity[date] = count;
-    }
-    settings.endArray();
-
-    qDebug() << "Loaded stats:" << m_stats.totalMessages << "total messages,"
-             << m_dailyActivity.size() << "days of activity";
+    qDebug() << "StatsManager: Loaded stats for" << workspaceCount << "workspaces";
+    qDebug() << "  Current workspace:" << m_currentWorkspaceId;
 }
 
 void StatsManager::saveStats()
 {
     QSettings settings("harbour-lagoon", "stats");
 
-    settings.setValue("totalMessages", m_stats.totalMessages);
-    settings.setValue("messagesThisWeek", m_stats.messagesThisWeek);
-    settings.setValue("messagesThisMonth", m_stats.messagesThisMonth);
-    settings.setValue("threadsStarted", m_stats.threadsStarted);
-    settings.setValue("threadReplies", m_stats.threadReplies);
-    settings.setValue("currentStreak", m_stats.currentStreak);
-    settings.setValue("lastMessageDate", m_stats.lastMessageDate);
-
-    // Save channel activity
-    settings.beginWriteArray("channelActivity");
+    settings.beginWriteArray("workspaces");
     int idx = 0;
-    for (auto it = m_stats.channelActivity.begin(); it != m_stats.channelActivity.end(); ++it) {
+    for (auto it = m_workspaceStats.begin(); it != m_workspaceStats.end(); ++it) {
         settings.setArrayIndex(idx++);
-        settings.setValue("channelId", it.key());
-        settings.setValue("count", it.value());
+        settings.setValue("workspaceId", it.key());
+        settings.setValue("date", it.value().date);
+        settings.setValue("totalMessages", it.value().totalMessages);
+        settings.setValue("userMessages", it.value().userMessages);
+        settings.setValue("currentUserId", it.value().currentUserId);
     }
     settings.endArray();
 
-    // Save user activity
-    settings.beginWriteArray("userActivity");
-    idx = 0;
-    for (auto it = m_stats.userActivity.begin(); it != m_stats.userActivity.end(); ++it) {
-        settings.setArrayIndex(idx++);
-        settings.setValue("userId", it.key());
-        settings.setValue("count", it.value());
-    }
-    settings.endArray();
-
-    // Save emoji usage
-    settings.beginWriteArray("emojiUsage");
-    idx = 0;
-    for (auto it = m_stats.emojiUsage.begin(); it != m_stats.emojiUsage.end(); ++it) {
-        settings.setArrayIndex(idx++);
-        settings.setValue("emoji", it.key());
-        settings.setValue("count", it.value());
-    }
-    settings.endArray();
-
-    // Save hourly activity
-    settings.beginWriteArray("hourlyActivity");
-    idx = 0;
-    for (auto it = m_hourlyActivity.begin(); it != m_hourlyActivity.end(); ++it) {
-        settings.setArrayIndex(idx++);
-        settings.setValue("hour", it.key());
-        settings.setValue("count", it.value());
-    }
-    settings.endArray();
-
-    // Save daily activity
-    settings.beginWriteArray("dailyActivity");
-    idx = 0;
-    for (auto it = m_dailyActivity.begin(); it != m_dailyActivity.end(); ++it) {
-        settings.setArrayIndex(idx++);
-        settings.setValue("date", it.key());
-        settings.setValue("count", it.value());
-    }
-    settings.endArray();
-
+    settings.setValue("currentWorkspaceId", m_currentWorkspaceId);
     settings.sync();
 
-    qDebug() << "Saved stats:" << m_stats.totalMessages << "total messages,"
-             << m_dailyActivity.size() << "days of activity";
+    qDebug() << "StatsManager: Saved stats for" << m_workspaceStats.size() << "workspaces";
 }
 
 void StatsManager::resetStats()
 {
-    m_stats = MessageStats();
-    m_hourlyActivity.clear();
-    m_dailyActivity.clear();
+    m_workspaceStats.clear();
+    m_currentWorkspaceId.clear();
 
     saveStats();
     emit statsChanged();
+
+    qDebug() << "StatsManager: All stats reset";
 }
