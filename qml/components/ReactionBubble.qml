@@ -5,6 +5,7 @@ BackgroundItem {
     id: reactionBubble
 
     property string emoji: ""
+    property string reactionName: ""  // Slack reaction name (e.g., "thumbsup")
     property int count: 0
     property bool isOwnReaction: false
 
@@ -28,15 +29,18 @@ BackgroundItem {
         anchors.centerIn: parent
         spacing: Theme.paddingSmall
 
-        Label {
-            text: emoji
-            font.pixelSize: Theme.fontSizeSmall
+        EmojiImage {
+            emoji: reactionBubble.emoji
+            reactionName: reactionBubble.reactionName
+            size: Theme.fontSizeMedium
+            anchors.verticalCenter: parent.verticalCenter
         }
 
         Label {
             text: count
             font.pixelSize: Theme.fontSizeExtraSmall
             color: isOwnReaction ? Theme.highlightColor : Theme.secondaryColor
+            anchors.verticalCenter: parent.verticalCenter
         }
     }
 

@@ -272,3 +272,57 @@ function emojiToReactionName(emoji) {
     // If not found, return the emoji as-is (might be a custom emoji)
     return emoji
 }
+
+// Convert Unicode emoji to Twemoji CDN URL
+function emojiToTwemojiUrl(emoji, size) {
+    if (!emoji) return ""
+
+    // Default size is 72x72
+    size = size || 72
+
+    // Convert emoji string to Unicode codepoints
+    var codePoints = []
+    for (var i = 0; i < emoji.length; i++) {
+        var code = emoji.charCodeAt(i)
+
+        // Handle surrogate pairs for emojis beyond U+FFFF
+        if (code >= 0xD800 && code <= 0xDBFF && i + 1 < emoji.length) {
+            var high = code
+            var low = emoji.charCodeAt(i + 1)
+            if (low >= 0xDC00 && low <= 0xDFFF) {
+                // Calculate actual codepoint from surrogate pair
+                var codepoint = ((high - 0xD800) * 0x400) + (low - 0xDC00) + 0x10000
+                codePoints.push(codepoint.toString(16))
+                i++ // Skip the low surrogate
+                continue
+            }
+        }
+
+        // Skip variation selectors (U+FE00-U+FE0F) and zero-width joiners (U+200D)
+        if (code === 0xFE0E || code === 0xFE0F || code === 0x200D) {
+            if (code === 0x200D) {
+                // Keep ZWJ for multi-part emojis (like family emojis)
+                codePoints.push(code.toString(16))
+            }
+            continue
+        }
+
+        codePoints.push(code.toString(16))
+    }
+
+    // Join codepoints with hyphens
+    var codepointStr = codePoints.join("-")
+
+    // Build Twemoji CDN URL
+    return "https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/" + size + "x" + size + "/" + codepointStr + ".png"
+}
+
+// Get Twemoji URL from Slack reaction name
+function reactionNameToTwemojiUrl(reactionName, size) {
+    var emoji = emojiMap[reactionName]
+    if (!emoji) {
+        // If not in our map, it might be a custom emoji or unsupported
+        return ""
+    }
+    return emojiToTwemojiUrl(emoji, size)
+}

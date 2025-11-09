@@ -221,12 +221,13 @@ ListItem {
                 Repeater {
                     model: messageReactions
 
-                    delegate: BackgroundItem {
-                        width: reactionRow.width + Theme.paddingMedium * 2
-                        height: Theme.itemSizeExtraSmall
+                    delegate: ReactionBubble {
+                        reactionName: modelData.name
+                        emoji: EmojiHelper.reactionToEmoji(modelData.name)
+                        count: modelData.count || 1
 
                         // Check if current user has reacted
-                        property bool userHasReacted: {
+                        isOwnReaction: {
                             var currentUserId = slackAPI.currentUserId()
                             var users = modelData.users || []
                             for (var i = 0; i < users.length; i++) {
@@ -235,34 +236,6 @@ ListItem {
                                 }
                             }
                             return false
-                        }
-
-                        Rectangle {
-                            anchors.fill: parent
-                            radius: Theme.paddingSmall
-                            // Highlight if user has reacted
-                            color: userHasReacted ? Theme.rgba(Theme.highlightBackgroundColor, 0.4) : Theme.rgba(Theme.highlightBackgroundColor, 0.2)
-                            border.color: userHasReacted ? Theme.highlightColor : Theme.rgba(Theme.highlightColor, 0.3)
-                            border.width: userHasReacted ? 2 : 1
-                        }
-
-                        Row {
-                            id: reactionRow
-                            anchors.centerIn: parent
-                            spacing: Theme.paddingSmall
-
-                            Label {
-                                text: EmojiHelper.reactionToEmoji(modelData.name)
-                                font.pixelSize: Theme.fontSizeSmall
-                                color: Theme.primaryColor
-                            }
-
-                            Label {
-                                text: modelData.count || 1
-                                font.pixelSize: Theme.fontSizeExtraSmall
-                                font.bold: true
-                                color: Theme.highlightColor
-                            }
                         }
 
                         onClicked: {

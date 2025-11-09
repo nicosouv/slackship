@@ -75,6 +75,8 @@ DISTFILES += \
     qml/components/ChannelDelegate.qml \
     qml/components/StatCard.qml \
     qml/components/ReactionBubble.qml \
+    qml/components/EmojiImage.qml \
+    qml/components/EmojiHelper.js \
     qml/components/ImageAttachment.qml \
     qml/components/FileAttachment.qml \
     qml/dialogs/EmojiPicker.qml \
