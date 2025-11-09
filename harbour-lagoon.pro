@@ -22,6 +22,7 @@ DEFINES += LAGOON_CLIENT_SECRET=\\\"$$CLIENT_SECRET\\\"
 SOURCES += \
     src/main.cpp \
     src/slackapi.cpp \
+    src/slackimageprovider.cpp \
     src/websocketclient.cpp \
     src/notificationmanager.cpp \
     src/workspacemanager.cpp \
@@ -40,6 +41,7 @@ SOURCES += \
 
 HEADERS += \
     src/slackapi.h \
+    src/slackimageprovider.h \
     src/websocketclient.h \
     src/notificationmanager.h \
     src/workspacemanager.h \

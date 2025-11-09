@@ -11,6 +11,7 @@
 #include <QLocale>
 
 #include "slackapi.h"
+#include "slackimageprovider.h"
 #include "notificationmanager.h"
 #include "workspacemanager.h"
 #include "filemanager.h"
@@ -62,6 +63,10 @@ int main(int argc, char *argv[])
 
     QScopedPointer<QQuickView> view(SailfishApp::createView());
 
+    // Create and register image provider for authenticated Slack images
+    SlackImageProvider *imageProvider = new SlackImageProvider();
+    view->engine()->addImageProvider("slack", imageProvider);
+
     // Create managers
     WorkspaceManager *workspaceManager = new WorkspaceManager(app.data());
     NotificationManager *notificationManager = new NotificationManager(app.data());
@@ -76,6 +81,17 @@ int main(int argc, char *argv[])
 
     // Create API instance
     SlackAPI *slackAPI = new SlackAPI(app.data());
+
+    // Connect SlackAPI token to image provider
+    QObject::connect(slackAPI, &SlackAPI::tokenChanged,
+                     [imageProvider, slackAPI]() {
+        imageProvider->setToken(slackAPI->token());
+        qDebug() << "Image provider: Token updated";
+    });
+    // Set initial token if already authenticated
+    if (!slackAPI->token().isEmpty()) {
+        imageProvider->setToken(slackAPI->token());
+    }
 
     // Create models
     ConversationModel *conversationModel = new ConversationModel(app.data());

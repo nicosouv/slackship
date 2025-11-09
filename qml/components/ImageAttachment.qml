@@ -34,7 +34,14 @@ Item {
             Image {
                 id: imageLoader
                 anchors.fill: parent
-                source: thumbUrl || imageUrl
+                // Use slack:// image provider for authenticated image loading
+                source: {
+                    var url = thumbUrl || imageUrl
+                    if (url && url.length > 0) {
+                        return "image://slack/" + url
+                    }
+                    return ""
+                }
                 fillMode: Image.PreserveAspectFit
                 asynchronous: true
                 smooth: true
