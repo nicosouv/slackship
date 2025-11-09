@@ -108,6 +108,31 @@ Page {
             }
         }
 
+        // Group conversations by type
+        section.property: "type"
+        section.delegate: Component {
+            Item {
+                width: parent.width
+                height: sectionLabel.height + Theme.paddingLarge
+
+                Label {
+                    id: sectionLabel
+                    anchors.left: parent.left
+                    anchors.leftMargin: Theme.horizontalPageMargin
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: {
+                        if (section === "channel" || section === "group") return qsTr("Channels")
+                        if (section === "im") return qsTr("Direct Messages")
+                        if (section === "mpim") return qsTr("Group Messages")
+                        return ""
+                    }
+                    font.pixelSize: Theme.fontSizeSmall
+                    font.bold: true
+                    color: Theme.highlightColor
+                }
+            }
+        }
+
         delegate: ChannelDelegate {
             visible: matchesSearch(name)
             height: visible ? implicitHeight : 0
