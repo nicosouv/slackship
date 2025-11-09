@@ -91,9 +91,7 @@ Page {
             }
             MenuItem {
                 text: qsTr("Search")
-                onClicked: {
-                    // TODO: Implement search
-                }
+                onClicked: pageStack.push(Qt.resolvedUrl("SearchPage.qml"))
             }
             MenuItem {
                 text: qsTr("Refresh")

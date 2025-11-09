@@ -210,6 +210,22 @@ void SlackAPI::fetchUserInfo(const QString &userId)
     makeApiRequest("users.info", params);
 }
 
+void SlackAPI::searchMessages(const QString &query)
+{
+    if (query.isEmpty()) {
+        qWarning() << "Search query is empty";
+        return;
+    }
+
+    QJsonObject params;
+    params["query"] = query;
+    params["count"] = 50;  // Number of results to return
+    params["sort"] = "timestamp";  // Sort by timestamp (newest first)
+    params["sort_dir"] = "desc";
+
+    makeApiRequest("search.messages", params);
+}
+
 void SlackAPI::connectWebSocket()
 {
     if (m_token.isEmpty()) {
@@ -447,6 +463,10 @@ void SlackAPI::processApiResponse(const QString &endpoint, const QJsonObject &re
     } else if (endpoint == "users.info") {
         QJsonObject user = response["user"].toObject();
         emit userInfoReceived(user);
+
+    } else if (endpoint == "search.messages") {
+        qDebug() << "SEARCH.MESSAGES: Emitting searchResultsReceived signal";
+        emit searchResultsReceived(response);
 
     } else if (endpoint == "rtm.connect") {
         qDebug() << "RTM connect response received";

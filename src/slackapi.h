@@ -68,6 +68,9 @@ public slots:
     void fetchUsers();
     void fetchUserInfo(const QString &userId);
 
+    // Search
+    void searchMessages(const QString &query);
+
     // Real-time connection
     void connectWebSocket();
     void disconnectWebSocket();
@@ -88,6 +91,7 @@ signals:
     void threadRepliesReceived(const QJsonArray &replies);
     void usersReceived(const QJsonArray &users);
     void userInfoReceived(const QJsonObject &userInfo);
+    void searchResultsReceived(const QJsonObject &results);
 
     // Real-time signals
     void messageReceived(const QJsonObject &message);
