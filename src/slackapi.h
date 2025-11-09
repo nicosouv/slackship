@@ -49,6 +49,7 @@ public slots:
     // Conversations
     void fetchConversations();
     void fetchConversationHistory(const QString &channelId, int limit = 50);
+    void fetchAllPublicChannels();  // Fetch all public channels (for browsing/joining)
     void joinConversation(const QString &channelId);
     void leaveConversation(const QString &channelId);
 
@@ -82,6 +83,7 @@ signals:
 
     // Data signals
     void conversationsReceived(const QJsonArray &conversations);
+    void publicChannelsReceived(const QJsonArray &channels);
     void messagesReceived(const QJsonArray &messages);
     void threadRepliesReceived(const QJsonArray &replies);
     void usersReceived(const QJsonArray &users);

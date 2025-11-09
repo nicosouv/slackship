@@ -83,6 +83,27 @@ QString UserModel::getUserAvatar(const QString &userId) const
     return QString();
 }
 
+QVariantMap UserModel::getUserDetails(const QString &userId) const
+{
+    QVariantMap details;
+    int index = findUserIndex(userId);
+
+    if (index >= 0) {
+        const User &user = m_users.at(index);
+        details["id"] = user.id;
+        details["name"] = user.name;
+        details["realName"] = user.realName;
+        details["displayName"] = user.displayName;
+        details["avatar"] = user.avatar;
+        details["statusText"] = user.statusText;
+        details["statusEmoji"] = user.statusEmoji;
+        details["isOnline"] = user.isOnline;
+        details["isBot"] = user.isBot;
+    }
+
+    return details;
+}
+
 void UserModel::updateUsers(const QJsonArray &users)
 {
     beginResetModel();

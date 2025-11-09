@@ -68,11 +68,17 @@ ListItem {
         anchors.leftMargin: (model.isParent !== undefined && !model.isParent) ? Theme.paddingLarge * 2 : Theme.paddingMedium
         spacing: Theme.paddingMedium
 
-        // User avatar
-        Item {
+        // User avatar (clickable)
+        BackgroundItem {
             id: avatarContainer
             width: Theme.iconSizeMedium
             height: Theme.iconSizeMedium
+
+            onClicked: {
+                pageStack.push(Qt.resolvedUrl("../pages/UserProfilePage.qml"), {
+                    userId: model.userId
+                })
+            }
 
             Image {
                 id: avatarImage
@@ -116,11 +122,23 @@ ListItem {
                 width: parent.width
                 spacing: Theme.paddingMedium
 
-                Label {
-                    text: userModel.getUserName(model.userId) || model.userId
-                    font.bold: true
-                    color: Theme.highlightColor
-                    font.pixelSize: Theme.fontSizeSmall
+                BackgroundItem {
+                    width: userNameLabel.width
+                    height: userNameLabel.height
+
+                    onClicked: {
+                        pageStack.push(Qt.resolvedUrl("../pages/UserProfilePage.qml"), {
+                            userId: model.userId
+                        })
+                    }
+
+                    Label {
+                        id: userNameLabel
+                        text: userModel.getUserName(model.userId) || model.userId
+                        font.bold: true
+                        color: Theme.highlightColor
+                        font.pixelSize: Theme.fontSizeSmall
+                    }
                 }
 
                 // "Thread starter" badge for parent message

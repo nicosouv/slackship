@@ -31,6 +31,7 @@ public:
     Q_INVOKABLE QString getUserName(const QString &userId) const;
     Q_INVOKABLE QString getUserAvatar(const QString &userId) const;
     Q_INVOKABLE int userCount(bool excludeBots = true) const;
+    Q_INVOKABLE QVariantMap getUserDetails(const QString &userId) const;
 
 public slots:
     void updateUsers(const QJsonArray &users);

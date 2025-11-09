@@ -94,6 +94,17 @@ void SlackAPI::fetchConversations()
     makeApiRequest("users.conversations", params);
 }
 
+void SlackAPI::fetchAllPublicChannels()
+{
+    QJsonObject params;
+    params["types"] = "public_channel";
+    params["limit"] = 200;
+    params["exclude_archived"] = true;
+
+    // Use conversations.list to get ALL public channels (not just joined ones)
+    makeApiRequest("conversations.list", params);
+}
+
 void SlackAPI::fetchConversationHistory(const QString &channelId, int limit)
 {
     QJsonObject params;
@@ -367,7 +378,7 @@ void SlackAPI::processApiResponse(const QString &endpoint, const QJsonObject &re
         // RTM WebSocket is deprecated - we use polling instead
         // connectWebSocket();
 
-    } else if (endpoint == "users.conversations" || endpoint == "conversations.list") {
+    } else if (endpoint == "users.conversations") {
         QJsonArray conversations = response["channels"].toArray();
 
         // For each conversation, check for new messages by fetching the latest message
@@ -383,6 +394,11 @@ void SlackAPI::processApiResponse(const QString &endpoint, const QJsonObject &re
         }
 
         emit conversationsReceived(conversations);
+
+    } else if (endpoint == "conversations.list") {
+        // This is for browsing ALL public channels (not just joined ones)
+        QJsonArray channels = response["channels"].toArray();
+        emit publicChannelsReceived(channels);
 
     } else if (endpoint == "conversations.history") {
         QJsonArray messages = response["messages"].toArray();

@@ -86,6 +86,10 @@ Page {
                 onClicked: pageStack.push(Qt.resolvedUrl("WorkspaceSwitcher.qml"))
             }
             MenuItem {
+                text: qsTr("Browse Channels")
+                onClicked: pageStack.push(Qt.resolvedUrl("BrowseChannelsPage.qml"))
+            }
+            MenuItem {
                 text: qsTr("Search")
                 onClicked: {
                     // TODO: Implement search
