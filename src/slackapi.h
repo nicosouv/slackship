@@ -88,6 +88,7 @@ signals:
     // Data signals
     void conversationsReceived(const QJsonArray &conversations);
     void conversationInfoReceived(const QJsonObject &channelInfo);
+    void conversationLeft(const QString &channelId);
     void publicChannelsReceived(const QJsonArray &channels);
     void messagesReceived(const QJsonArray &messages);
     void threadRepliesReceived(const QJsonArray &replies);

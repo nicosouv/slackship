@@ -127,7 +127,11 @@ void SlackAPI::leaveConversation(const QString &channelId)
     QJsonObject params;
     params["channel"] = channelId;
 
-    makeApiRequest("conversations.leave", params);
+    QNetworkReply *reply = makeApiRequest("conversations.leave", params);
+    // Store channel ID for later use in response handler
+    if (reply) {
+        reply->setProperty("leftChannelId", channelId);
+    }
 }
 
 void SlackAPI::fetchConversationInfo(const QString &channelId)
@@ -516,6 +520,15 @@ void SlackAPI::processApiResponse(const QString &endpoint, const QJsonObject &re
         QString timestamp = reply->property("reactionTimestamp").toString();
         if (!channelId.isEmpty() && !timestamp.isEmpty()) {
             fetchSingleMessage(channelId, timestamp);
+        }
+
+    } else if (endpoint == "conversations.leave") {
+        qDebug() << "CONVERSATIONS.LEAVE: Left channel successfully";
+        QString channelId = reply->property("leftChannelId").toString();
+        if (!channelId.isEmpty()) {
+            emit conversationLeft(channelId);
+            // Refresh the conversations list to reflect the change
+            fetchConversations();
         }
 
     } else if (endpoint == "rtm.connect") {

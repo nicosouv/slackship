@@ -17,6 +17,16 @@ Page {
         onConversationInfoReceived: function(info) {
             channelInfo = info
         }
+
+        onConversationLeft: function(leftChannelId) {
+            // Only navigate if this is the channel we just left
+            if (leftChannelId === channelId) {
+                // Navigate back to conversations list (FirstPage)
+                pageStack.pop(pageStack.find(function(page) {
+                    return page.objectName === "firstPage"
+                }))
+            }
+        }
     }
 
     SilicaFlickable {
@@ -102,10 +112,7 @@ Page {
                 onClicked: {
                     remorse.execute(qsTr("Leaving channel"), function() {
                         slackAPI.leaveConversation(channelId)
-                        // Go back to conversations list
-                        pageStack.pop(pageStack.find(function(page) {
-                            return page.objectName === "firstPage"
-                        }))
+                        // Navigation will be handled by onConversationLeft signal
                     })
                 }
             }
