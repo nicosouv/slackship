@@ -23,7 +23,8 @@ public:
         AttachmentsRole,
         FilesRole,
         IsEditedRole,
-        IsOwnMessageRole
+        IsOwnMessageRole,
+        ChannelIdRole
     };
 
     explicit MessageModel(QObject *parent = nullptr);
@@ -59,6 +60,7 @@ private:
         QJsonArray files;
         bool isEdited;
         bool isOwnMessage;
+        QString channelId;
     };
 
     QList<Message> m_messages;

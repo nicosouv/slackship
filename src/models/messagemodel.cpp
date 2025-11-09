@@ -44,6 +44,8 @@ QVariant MessageModel::data(const QModelIndex &index, int role) const
         return message.isEdited;
     case IsOwnMessageRole:
         return message.isOwnMessage;
+    case ChannelIdRole:
+        return message.channelId;
     default:
         return QVariant();
     }
@@ -64,6 +66,7 @@ QHash<int, QByteArray> MessageModel::roleNames() const
     roles[FilesRole] = "files";
     roles[IsEditedRole] = "isEdited";
     roles[IsOwnMessageRole] = "isOwnMessage";
+    roles[ChannelIdRole] = "channelId";
     return roles;
 }
 
@@ -170,6 +173,7 @@ MessageModel::Message MessageModel::parseMessage(const QJsonObject &json) const
     msg.files = json["files"].toArray();
     msg.isEdited = json["edited"].isObject();
     msg.isOwnMessage = false; // Will be set based on current user
+    msg.channelId = m_currentChannelId; // Set from the current channel context
 
     return msg;
 }
