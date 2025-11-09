@@ -260,3 +260,15 @@ function convertEmoji(text) {
 function reactionToEmoji(reactionName) {
     return emojiMap[reactionName] || ":" + reactionName + ":"
 }
+
+// Convert Unicode emoji back to Slack reaction name
+function emojiToReactionName(emoji) {
+    // Search through the map for the Unicode emoji
+    for (var name in emojiMap) {
+        if (emojiMap[name] === emoji) {
+            return name
+        }
+    }
+    // If not found, return the emoji as-is (might be a custom emoji)
+    return emoji
+}

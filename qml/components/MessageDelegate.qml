@@ -200,12 +200,25 @@ ListItem {
                         width: reactionRow.width + Theme.paddingMedium * 2
                         height: Theme.itemSizeExtraSmall
 
+                        // Check if current user has reacted
+                        property bool userHasReacted: {
+                            var currentUserId = slackAPI.currentUserId()
+                            var users = modelData.users || []
+                            for (var i = 0; i < users.length; i++) {
+                                if (users[i] === currentUserId) {
+                                    return true
+                                }
+                            }
+                            return false
+                        }
+
                         Rectangle {
                             anchors.fill: parent
                             radius: Theme.paddingSmall
-                            color: Theme.rgba(Theme.highlightBackgroundColor, 0.2)
-                            border.color: Theme.rgba(Theme.highlightColor, 0.3)
-                            border.width: 1
+                            // Highlight if user has reacted
+                            color: userHasReacted ? Theme.rgba(Theme.highlightBackgroundColor, 0.4) : Theme.rgba(Theme.highlightBackgroundColor, 0.2)
+                            border.color: userHasReacted ? Theme.highlightColor : Theme.rgba(Theme.highlightColor, 0.3)
+                            border.width: userHasReacted ? 2 : 1
                         }
 
                         Row {
@@ -228,7 +241,24 @@ ListItem {
                         }
 
                         onClicked: {
-                            // TODO: Toggle reaction
+                            // Check if current user has reacted with this emoji
+                            var currentUserId = slackAPI.currentUserId()
+                            var users = modelData.users || []
+                            var hasReacted = false
+
+                            for (var i = 0; i < users.length; i++) {
+                                if (users[i] === currentUserId) {
+                                    hasReacted = true
+                                    break
+                                }
+                            }
+
+                            // Toggle: remove if already reacted, add if not
+                            if (hasReacted) {
+                                slackAPI.removeReaction(model.channelId, model.timestamp, modelData.name)
+                            } else {
+                                slackAPI.addReaction(model.channelId, model.timestamp, modelData.name)
+                            }
                         }
                     }
                 }
@@ -365,7 +395,12 @@ ListItem {
         MenuItem {
             text: qsTr("Add reaction")
             onClicked: {
-                // TODO: Show emoji picker
+                var dialog = pageStack.push(Qt.resolvedUrl("../dialogs/EmojiPicker.qml"))
+                dialog.accepted.connect(function() {
+                    // Convert Unicode emoji to Slack reaction name
+                    var reactionName = EmojiHelper.emojiToReactionName(dialog.selectedEmoji)
+                    slackAPI.addReaction(model.channelId, model.timestamp, reactionName)
+                })
             }
         }
 
@@ -380,7 +415,12 @@ ListItem {
             text: qsTr("Edit")
             visible: model.isOwnMessage
             onClicked: {
-                // TODO: Edit message
+                var dialog = pageStack.push(Qt.resolvedUrl("../dialogs/EditMessageDialog.qml"), {
+                    originalText: model.text
+                })
+                dialog.accepted.connect(function() {
+                    slackAPI.updateMessage(model.channelId, model.timestamp, dialog.editedText)
+                })
             }
         }
 
