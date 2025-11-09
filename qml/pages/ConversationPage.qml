@@ -1,5 +1,6 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import Qt.labs.settings 1.0
 import "../components"
 
 Page {
@@ -11,10 +12,24 @@ Page {
     property var typingUsers: []
     property var typingTimers: ({})
 
+    // Draft management with Qt.labs.settings
+    Settings {
+        id: draftSettings
+        category: "MessageDrafts"
+    }
+
     Component.onCompleted: {
         console.log("ConversationPage loaded")
         console.log("Channel:", channelName, channelId)
         console.log("Message count:", messageModel.rowCount())
+
+        // Restore draft for this channel
+        loadDraft()
+    }
+
+    Component.onDestruction: {
+        // Save draft when leaving the page
+        saveDraft()
     }
 
     function refreshMessages() {
@@ -57,6 +72,31 @@ Page {
             typingTimers[userId].destroy()
             delete typingTimers[userId]
         }
+    }
+
+    function saveDraft() {
+        var draftText = messageInput.text.trim()
+        if (draftText.length > 0) {
+            // Save non-empty draft
+            draftSettings.setValue("draft_" + channelId, draftText)
+            console.log("Draft saved for channel:", channelId)
+        } else {
+            // Remove draft if empty
+            draftSettings.remove("draft_" + channelId)
+        }
+    }
+
+    function loadDraft() {
+        var draftText = draftSettings.value("draft_" + channelId, "")
+        if (draftText.length > 0) {
+            messageInput.text = draftText
+            console.log("Draft loaded for channel:", channelId)
+        }
+    }
+
+    function clearDraft() {
+        draftSettings.remove("draft_" + channelId)
+        console.log("Draft cleared for channel:", channelId)
     }
 
     SilicaListView {
@@ -180,6 +220,7 @@ Page {
                             isSendingMessage = true
                             var messageText = messageInput.text
                             messageInput.text = ""
+                            clearDraft()  // Clear saved draft after sending
                             slackAPI.sendMessage(channelId, messageText)
 
                             // Refresh messages after a short delay to show the new message
