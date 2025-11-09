@@ -14,6 +14,8 @@ DBusAdaptor::DBusAdaptor(SlackShipDaemon *daemon)
             this, &DBusAdaptor::ConnectionStateChanged);
     connect(m_daemon, &SlackShipDaemon::syncCompleted,
             this, &DBusAdaptor::SyncCompleted);
+    connect(m_daemon, &SlackShipDaemon::userTyping,
+            this, &DBusAdaptor::UserTyping);
 
     qDebug() << "D-Bus adaptor created";
 }

@@ -168,7 +168,9 @@ void SlackShipDaemon::handleWebSocketMessage(const QJsonObject &message)
         QString channelId = message["channel"].toString();
         emit newMessageReceived(channelId, QJsonDocument(message).toJson());
     } else if (type == "user_typing") {
-        // Could emit typing indicator signal
+        QString channelId = message["channel"].toString();
+        QString userId = message["user"].toString();
+        emit userTyping(channelId, userId);
     }
 }
 

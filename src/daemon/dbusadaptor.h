@@ -30,6 +30,7 @@ signals:
     void UnreadCountChanged(int totalUnread);
     void ConnectionStateChanged(bool connected);
     void SyncCompleted();
+    void UserTyping(const QString &channelId, const QString &userId);
 
 private:
     SlackShipDaemon *m_daemon;

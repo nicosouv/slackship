@@ -104,6 +104,7 @@ signals:
     void messageDeleted(const QString &channelId, const QString &ts);
     void reactionAdded(const QJsonObject &reaction);
     void reactionRemoved(const QJsonObject &reaction);
+    void userTyping(const QString &typingChannelId, const QString &typingUserId);
 
     // Error signals
     void networkError(const QString &error);

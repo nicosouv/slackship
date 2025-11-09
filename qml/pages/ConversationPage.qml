@@ -8,6 +8,8 @@ Page {
     property string channelId
     property string channelName
     property bool isSendingMessage: false
+    property var typingUsers: []
+    property var typingTimers: ({})
 
     Component.onCompleted: {
         console.log("ConversationPage loaded")
@@ -17,6 +19,44 @@ Page {
 
     function refreshMessages() {
         slackAPI.fetchConversationHistory(channelId)
+    }
+
+    function addTypingUser(userId) {
+        // Add user to typing list if not already there
+        var users = typingUsers.slice()
+        if (users.indexOf(userId) === -1) {
+            users.push(userId)
+            typingUsers = users
+        }
+
+        // Clear existing timer for this user
+        if (typingTimers[userId]) {
+            typingTimers[userId].stop()
+            typingTimers[userId].destroy()
+        }
+
+        // Create new timer to remove user after 3 seconds
+        var timer = Qt.createQmlObject('import QtQuick 2.0; Timer { interval: 3000; repeat: false }', conversationPage)
+        timer.triggered.connect(function() {
+            removeTypingUser(userId)
+        })
+        typingTimers[userId] = timer
+        timer.start()
+    }
+
+    function removeTypingUser(userId) {
+        var users = typingUsers.slice()
+        var index = users.indexOf(userId)
+        if (index > -1) {
+            users.splice(index, 1)
+            typingUsers = users
+        }
+
+        if (typingTimers[userId]) {
+            typingTimers[userId].stop()
+            typingTimers[userId].destroy()
+            delete typingTimers[userId]
+        }
     }
 
     SilicaListView {
@@ -67,12 +107,39 @@ Page {
         id: inputPanel
         dock: Dock.Bottom
         width: parent.width
-        height: messageInput.height + Theme.paddingLarge * 2
+        height: messageInput.height + Theme.paddingLarge * 2 + (typingIndicator.visible ? typingIndicator.height : 0)
         open: true
 
-        Row {
+        Column {
             anchors.fill: parent
             anchors.margins: Theme.paddingMedium
+            spacing: Theme.paddingSmall
+
+            // Typing indicator
+            Label {
+                id: typingIndicator
+                width: parent.width
+                visible: typingUsers.length > 0
+                text: {
+                    if (typingUsers.length === 0) return ""
+                    if (typingUsers.length === 1) {
+                        var userName = userModel.getUserName(typingUsers[0])
+                        return userName + " " + qsTr("is typing...")
+                    } else if (typingUsers.length === 2) {
+                        var user1 = userModel.getUserName(typingUsers[0])
+                        var user2 = userModel.getUserName(typingUsers[1])
+                        return user1 + " " + qsTr("and") + " " + user2 + " " + qsTr("are typing...")
+                    } else {
+                        return qsTr("Several people are typing...")
+                    }
+                }
+                font.pixelSize: Theme.fontSizeExtraSmall
+                color: Theme.secondaryHighlightColor
+                truncationMode: TruncationMode.Fade
+            }
+
+        Row {
+            width: parent.width
             spacing: Theme.paddingSmall
 
             IconButton {
@@ -128,6 +195,7 @@ Page {
                     visible: isSendingMessage
                 }
             }
+        }
         }
     }
 
@@ -276,6 +344,13 @@ Page {
             if (isSendingMessage) {
                 isSendingMessage = false
                 refreshTimer.stop()
+            }
+        }
+
+        // Handle typing indicators
+        onUserTyping: {
+            if (typingChannelId === channelId) {
+                addTypingUser(typingUserId)
             }
         }
     }

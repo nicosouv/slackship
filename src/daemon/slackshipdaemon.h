@@ -38,6 +38,7 @@ signals:
     void unreadCountChanged(int totalUnread);
     void connectionStateChanged(bool connected);
     void syncCompleted();
+    void userTyping(const QString &channelId, const QString &userId);
 
 private slots:
     // WebSocket handlers

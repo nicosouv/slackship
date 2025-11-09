@@ -345,6 +345,10 @@ void SlackAPI::handleWebSocketMessage(const QJsonObject &message)
         emit reactionAdded(message);
     } else if (type == "reaction_removed") {
         emit reactionRemoved(message);
+    } else if (type == "user_typing") {
+        QString channelId = message["channel"].toString();
+        QString userId = message["user"].toString();
+        emit userTyping(channelId, userId);
     }
 }
 
