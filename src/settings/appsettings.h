@@ -13,6 +13,9 @@ class AppSettings : public QObject
     Q_PROPERTY(QString language READ language WRITE setLanguage NOTIFY languageChanged)
     Q_PROPERTY(qint64 totalBandwidthBytes READ totalBandwidthBytes NOTIFY totalBandwidthBytesChanged)
     Q_PROPERTY(int pollingInterval READ pollingInterval WRITE setPollingInterval NOTIFY pollingIntervalChanged)
+    Q_PROPERTY(bool channelsSectionExpanded READ channelsSectionExpanded WRITE setChannelsSectionExpanded NOTIFY channelsSectionExpandedChanged)
+    Q_PROPERTY(bool dmsSectionExpanded READ dmsSectionExpanded WRITE setDmsSectionExpanded NOTIFY dmsSectionExpandedChanged)
+    Q_PROPERTY(bool groupsSectionExpanded READ groupsSectionExpanded WRITE setGroupsSectionExpanded NOTIFY groupsSectionExpandedChanged)
 
 public:
     explicit AppSettings(QObject *parent = nullptr);
@@ -38,6 +41,16 @@ public:
     int pollingInterval() const;
     void setPollingInterval(int seconds);
 
+    // Section expanded states
+    bool channelsSectionExpanded() const;
+    void setChannelsSectionExpanded(bool expanded);
+
+    bool dmsSectionExpanded() const;
+    void setDmsSectionExpanded(bool expanded);
+
+    bool groupsSectionExpanded() const;
+    void setGroupsSectionExpanded(bool expanded);
+
 signals:
     void notificationsEnabledChanged();
     void soundEnabledChanged();
@@ -45,6 +58,9 @@ signals:
     void languageChanged();
     void totalBandwidthBytesChanged();
     void pollingIntervalChanged();
+    void channelsSectionExpandedChanged();
+    void dmsSectionExpandedChanged();
+    void groupsSectionExpandedChanged();
 
 private:
     QSettings m_settings;

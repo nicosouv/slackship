@@ -4,11 +4,17 @@ import "../components"
 
 Page {
     id: firstPage
+    objectName: "firstPage"
 
     // Allow swiping right to access Stats page
     allowedOrientations: Orientation.All
 
     property bool isLoading: false
+
+    // Track expanded state for sections
+    property bool channelsExpanded: appSettings.channelsSectionExpanded
+    property bool dmsExpanded: appSettings.dmsSectionExpanded
+    property bool groupsExpanded: appSettings.groupsSectionExpanded
 
     Component.onCompleted: {
         console.log("FirstPage loaded - fetching conversations")
@@ -52,24 +58,73 @@ Page {
         slackAPI.fetchUsers()
     }
 
-    SilicaListView {
-        id: conversationListView
-        anchors.fill: parent
-        model: conversationModel
+    // Filter conversations by type
+    function filterConversationsByType(type, forceShow) {
+        var result = []
+        for (var i = 0; i < conversationModel.rowCount(); i++) {
+            var item = conversationModel.get(i)
 
-        // Group conversations by type (channels vs DMs)
-        section.property: "type"
-        section.criteria: ViewSection.FullString
-        section.delegate: Component {
-            SectionHeader {
-                text: {
-                    if (section === "im") return qsTr("Direct Messages")
-                    else if (section === "mpim") return qsTr("Group Messages")
-                    else if (section === "channel" || section === "group") return qsTr("Channels")
-                    else return qsTr("Other")
+            // Normalize type matching
+            var itemType = item.type
+            var matches = false
+
+            if (type === "channel") {
+                matches = (itemType === "channel" || itemType === "group")
+            } else if (type === "im") {
+                matches = (itemType === "im")
+            } else if (type === "mpim") {
+                matches = (itemType === "mpim")
+            }
+
+            if (matches) {
+                // Always show if: unread messages, starred, or section is expanded
+                if (forceShow || item.unreadCount > 0 || item.isStarred) {
+                    result.push(item)
                 }
             }
         }
+        return result
+    }
+
+    // Count conversations by type
+    function countByType(type) {
+        var count = 0
+        for (var i = 0; i < conversationModel.rowCount(); i++) {
+            var item = conversationModel.get(i)
+            var itemType = item.type
+
+            if (type === "channel" && (itemType === "channel" || itemType === "group")) {
+                count++
+            } else if (type === "im" && itemType === "im") {
+                count++
+            } else if (type === "mpim" && itemType === "mpim") {
+                count++
+            }
+        }
+        return count
+    }
+
+    // Count unread by type
+    function countUnreadByType(type) {
+        var count = 0
+        for (var i = 0; i < conversationModel.rowCount(); i++) {
+            var item = conversationModel.get(i)
+            var itemType = item.type
+
+            if (type === "channel" && (itemType === "channel" || itemType === "group")) {
+                if (item.unreadCount > 0) count++
+            } else if (type === "im" && itemType === "im") {
+                if (item.unreadCount > 0) count++
+            } else if (type === "mpim" && itemType === "mpim") {
+                if (item.unreadCount > 0) count++
+            }
+        }
+        return count
+    }
+
+    SilicaFlickable {
+        anchors.fill: parent
+        contentHeight: contentColumn.height + header.height
 
         PullDownMenu {
             MenuItem {
@@ -99,37 +154,172 @@ Page {
             }
         }
 
-        header: PageHeader {
+        PageHeader {
+            id: header
             title: slackAPI.workspaceName || "Lagoon"
             description: slackAPI.isAuthenticated ? qsTr("Connected") : qsTr("Disconnected")
         }
 
-        delegate: ChannelDelegate {
-            onClicked: {
-                console.log("Channel clicked:", model.name, model.id)
+        Column {
+            id: contentColumn
+            anchors.top: header.bottom
+            width: parent.width
 
-                // Mark channel as read (clear unread count)
-                conversationModel.updateUnreadCount(model.id, 0)
+            // Channels Section
+            ExpandingSection {
+                id: channelsSection
+                width: parent.width
+                title: qsTr("Channels") + " (" + countByType("channel") + ")"
+                expanded: channelsExpanded
 
-                // Clear notifications for this channel
-                notificationManager.clearChannelNotifications(model.id)
+                content.sourceComponent: Column {
+                    width: channelsSection.width
 
-                // Set current channel ID (property assignment, not function call)
-                messageModel.currentChannelId = model.id
+                    Repeater {
+                        model: channelsExpanded ? filterConversationsByType("channel", true) : filterConversationsByType("channel", false)
 
-                // Fetch messages for this channel
-                slackAPI.fetchConversationHistory(model.id)
+                        delegate: ChannelDelegate {
+                            width: channelsSection.width
 
-                // Navigate to conversation page
-                pageStack.push(Qt.resolvedUrl("ConversationPage.qml"), {
-                    "channelId": model.id,
-                    "channelName": model.name
-                })
+                            onClicked: {
+                                console.log("Channel clicked:", modelData.name, modelData.id)
+
+                                // Mark channel as read (clear unread count)
+                                conversationModel.updateUnreadCount(modelData.id, 0)
+
+                                // Clear notifications for this channel
+                                notificationManager.clearChannelNotifications(modelData.id)
+
+                                // Set current channel ID
+                                messageModel.currentChannelId = modelData.id
+
+                                // Fetch messages for this channel
+                                slackAPI.fetchConversationHistory(modelData.id)
+
+                                // Navigate to conversation page
+                                pageStack.push(Qt.resolvedUrl("ConversationPage.qml"), {
+                                    "channelId": modelData.id,
+                                    "channelName": modelData.name
+                                })
+                            }
+
+                            // Pass modelData to delegate properties
+                            Component.onCompleted: {
+                                // The delegate expects model.* but we're using modelData
+                                // We need to map these properly
+                            }
+                        }
+                    }
+
+                    Label {
+                        width: parent.width
+                        horizontalAlignment: Text.AlignHCenter
+                        text: qsTr("No channels")
+                        color: Theme.secondaryColor
+                        font.pixelSize: Theme.fontSizeSmall
+                        visible: countByType("channel") === 0
+                        height: visible ? implicitHeight + Theme.paddingLarge * 2 : 0
+                    }
+                }
+
+                onExpandedChanged: {
+                    channelsExpanded = expanded
+                    appSettings.channelsSectionExpanded = expanded
+                }
+            }
+
+            // Direct Messages Section
+            ExpandingSection {
+                id: dmsSection
+                width: parent.width
+                title: qsTr("Direct Messages") + " (" + countByType("im") + ")"
+                expanded: dmsExpanded
+
+                content.sourceComponent: Column {
+                    width: dmsSection.width
+
+                    Repeater {
+                        model: dmsExpanded ? filterConversationsByType("im", true) : filterConversationsByType("im", false)
+
+                        delegate: ChannelDelegate {
+                            width: dmsSection.width
+
+                            onClicked: {
+                                console.log("DM clicked:", modelData.name, modelData.id)
+
+                                conversationModel.updateUnreadCount(modelData.id, 0)
+                                notificationManager.clearChannelNotifications(modelData.id)
+                                messageModel.currentChannelId = modelData.id
+                                slackAPI.fetchConversationHistory(modelData.id)
+
+                                pageStack.push(Qt.resolvedUrl("ConversationPage.qml"), {
+                                    "channelId": modelData.id,
+                                    "channelName": modelData.name
+                                })
+                            }
+                        }
+                    }
+
+                    Label {
+                        width: parent.width
+                        horizontalAlignment: Text.AlignHCenter
+                        text: qsTr("No direct messages")
+                        color: Theme.secondaryColor
+                        font.pixelSize: Theme.fontSizeSmall
+                        visible: countByType("im") === 0
+                        height: visible ? implicitHeight + Theme.paddingLarge * 2 : 0
+                    }
+                }
+
+                onExpandedChanged: {
+                    dmsExpanded = expanded
+                    appSettings.dmsSectionExpanded = expanded
+                }
+            }
+
+            // Group Messages Section
+            ExpandingSection {
+                id: groupsSection
+                width: parent.width
+                title: qsTr("Group Messages") + " (" + countByType("mpim") + ")"
+                expanded: groupsExpanded
+                visible: countByType("mpim") > 0  // Hide section if no group messages
+
+                content.sourceComponent: Column {
+                    width: groupsSection.width
+
+                    Repeater {
+                        model: groupsExpanded ? filterConversationsByType("mpim", true) : filterConversationsByType("mpim", false)
+
+                        delegate: ChannelDelegate {
+                            width: groupsSection.width
+
+                            onClicked: {
+                                console.log("Group clicked:", modelData.name, modelData.id)
+
+                                conversationModel.updateUnreadCount(modelData.id, 0)
+                                notificationManager.clearChannelNotifications(modelData.id)
+                                messageModel.currentChannelId = modelData.id
+                                slackAPI.fetchConversationHistory(modelData.id)
+
+                                pageStack.push(Qt.resolvedUrl("ConversationPage.qml"), {
+                                    "channelId": modelData.id,
+                                    "channelName": modelData.name
+                                })
+                            }
+                        }
+                    }
+                }
+
+                onExpandedChanged: {
+                    groupsExpanded = expanded
+                    appSettings.groupsSectionExpanded = expanded
+                }
             }
         }
 
         ViewPlaceholder {
-            enabled: conversationListView.count === 0 && !isLoading
+            enabled: conversationModel.rowCount() === 0 && !isLoading
             text: qsTr("No conversations")
             hintText: qsTr("Pull down to refresh")
         }

@@ -5,6 +5,20 @@ ListItem {
     id: channelItem
     contentHeight: Theme.itemSizeMedium
 
+    // Support both model-based (ListView) and property-based (Repeater) usage
+    // When used with modelData, these properties should be bound explicitly
+    property var channelData: model || modelData || {}
+    property string channelId: channelData.id || ""
+    property string channelName: channelData.name || ""
+    property string channelType: channelData.type || ""
+    property int channelUnreadCount: channelData.unreadCount || 0
+    property bool channelIsStarred: channelData.isStarred || false
+    property bool channelIsPrivate: channelData.isPrivate || false
+    property string channelUserId: channelData.userId || ""
+    property string channelTopic: channelData.topic || ""
+    property string channelLastMessage: channelData.lastMessage || ""
+    property bool channelIsMember: channelData.isMember !== undefined ? channelData.isMember : true
+
     Row {
         anchors.fill: parent
         anchors.leftMargin: Theme.horizontalPageMargin
@@ -15,8 +29,8 @@ ListItem {
         Rectangle {
             width: Theme.paddingSmall
             height: parent.height
-            color: model.unreadCount > 0 ? Theme.highlightColor : "transparent"
-            visible: model.unreadCount > 0
+            color: channelUnreadCount > 0 ? Theme.highlightColor : "transparent"
+            visible: channelUnreadCount > 0
         }
 
         Column {
@@ -33,14 +47,14 @@ ListItem {
                     text: "⭐"
                     font.pixelSize: Theme.fontSizeSmall
                     color: Theme.highlightColor
-                    visible: model.isStarred
+                    visible: channelIsStarred
                 }
 
                 // Icon based on type
                 Label {
-                    text: model.type === "im" ? "💬" :
-                          model.type === "mpim" ? "👥" :
-                          model.isPrivate ? "🔒" : "#"
+                    text: channelType === "im" ? "💬" :
+                          channelType === "mpim" ? "👥" :
+                          channelIsPrivate ? "🔒" : "#"
                     font.pixelSize: Theme.fontSizeSmall
                     color: channelItem.highlighted ? Theme.highlightColor : Theme.primaryColor
                 }
@@ -48,20 +62,19 @@ ListItem {
                 Label {
                     width: parent.width - parent.spacing * 2
                     text: {
-                        if (model.type === "im" && model.userId) {
+                        if (channelType === "im" && channelUserId) {
                             // For DMs, show user's real name
-                            var userName = userModel.getUserName(model.userId)
-                            console.log("DM userId:", model.userId, "-> userName:", userName)
+                            var userName = userModel.getUserName(channelUserId)
                             return userName
-                        } else if (model.type === "mpim") {
+                        } else if (channelType === "mpim") {
                             // For multi-person DMs, show name without #
-                            return model.name
+                            return channelName
                         } else {
                             // For channels, show name (without # since we have icon)
-                            return model.name
+                            return channelName
                         }
                     }
-                    font.bold: model.unreadCount > 0
+                    font.bold: channelUnreadCount > 0
                     truncationMode: TruncationMode.Fade
                     color: channelItem.highlighted ? Theme.highlightColor : Theme.primaryColor
                 }
@@ -69,7 +82,7 @@ ListItem {
 
             Label {
                 width: parent.width
-                text: model.topic || model.lastMessage || qsTr("No messages")
+                text: channelTopic || channelLastMessage || qsTr("No messages")
                 truncationMode: TruncationMode.Fade
                 font.pixelSize: Theme.fontSizeExtraSmall
                 color: Theme.secondaryColor
@@ -79,7 +92,7 @@ ListItem {
         Label {
             id: unreadBadge
             anchors.verticalCenter: parent.verticalCenter
-            text: model.unreadCount > 0 ? model.unreadCount : ""
+            text: channelUnreadCount > 0 ? channelUnreadCount : ""
             font.pixelSize: Theme.fontSizeExtraSmall
             font.bold: true
             color: Theme.highlightColor
@@ -89,9 +102,9 @@ ListItem {
 
     menu: ContextMenu {
         MenuItem {
-            text: model.isStarred ? qsTr("Unstar") : qsTr("Star")
+            text: channelIsStarred ? qsTr("Unstar") : qsTr("Star")
             onClicked: {
-                conversationModel.toggleStar(model.id)
+                conversationModel.toggleStar(channelId)
             }
         }
         MenuItem {
@@ -102,10 +115,10 @@ ListItem {
         }
         MenuItem {
             text: qsTr("Leave channel")
-            visible: model.isMember
+            visible: channelIsMember
             onClicked: {
                 remorseAction(qsTr("Leaving channel"), function() {
-                    slackAPI.leaveConversation(model.id)
+                    slackAPI.leaveConversation(channelId)
                 })
             }
         }

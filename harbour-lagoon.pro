@@ -73,6 +73,7 @@ DISTFILES += \
     qml/pages/UserProfilePage.qml \
     qml/components/MessageDelegate.qml \
     qml/components/ChannelDelegate.qml \
+    qml/components/ExpandingSection.qml \
     qml/components/StatCard.qml \
     qml/components/ReactionBubble.qml \
     qml/components/EmojiImage.qml \

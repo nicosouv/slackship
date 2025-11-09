@@ -90,3 +90,45 @@ void AppSettings::setPollingInterval(int seconds)
         emit pollingIntervalChanged();
     }
 }
+
+bool AppSettings::channelsSectionExpanded() const
+{
+    // Default to expanded (true)
+    return m_settings.value("ui/channelsSectionExpanded", true).toBool();
+}
+
+void AppSettings::setChannelsSectionExpanded(bool expanded)
+{
+    if (channelsSectionExpanded() != expanded) {
+        m_settings.setValue("ui/channelsSectionExpanded", expanded);
+        emit channelsSectionExpandedChanged();
+    }
+}
+
+bool AppSettings::dmsSectionExpanded() const
+{
+    // Default to expanded (true)
+    return m_settings.value("ui/dmsSectionExpanded", true).toBool();
+}
+
+void AppSettings::setDmsSectionExpanded(bool expanded)
+{
+    if (dmsSectionExpanded() != expanded) {
+        m_settings.setValue("ui/dmsSectionExpanded", expanded);
+        emit dmsSectionExpandedChanged();
+    }
+}
+
+bool AppSettings::groupsSectionExpanded() const
+{
+    // Default to expanded (true)
+    return m_settings.value("ui/groupsSectionExpanded", true).toBool();
+}
+
+void AppSettings::setGroupsSectionExpanded(bool expanded)
+{
+    if (groupsSectionExpanded() != expanded) {
+        m_settings.setValue("ui/groupsSectionExpanded", expanded);
+        emit groupsSectionExpandedChanged();
+    }
+}
