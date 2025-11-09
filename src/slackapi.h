@@ -125,6 +125,7 @@ private:
     void processApiResponse(const QString &endpoint, const QJsonObject &response, QNetworkReply *reply);
     void trackBandwidth(qint64 bytes);
     void checkForNewMessages(const QString &channelId);
+    void fetchSingleMessage(const QString &channelId, const QString &timestamp);
     QString getLastSeenTimestamp(const QString &channelId) const;
     void setLastSeenTimestamp(const QString &channelId, const QString &timestamp);
 

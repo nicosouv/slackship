@@ -261,6 +261,11 @@ Page {
             }
         }
 
+        onMessageUpdated: {
+            // Update message in the model (e.g., after reaction changes)
+            messageModel.updateMessage(message)
+        }
+
         // Handle API errors (like failed message send)
         onApiError: {
             if (isSendingMessage) {

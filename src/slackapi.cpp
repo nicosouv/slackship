@@ -186,7 +186,10 @@ void SlackAPI::addReaction(const QString &channelId, const QString &ts, const QS
     params["timestamp"] = ts;
     params["name"] = emoji;
 
-    makeApiRequest("reactions.add", params);
+    QNetworkReply *reply = makeApiRequest("reactions.add", params);
+    // Store channel and timestamp for later refresh
+    reply->setProperty("reactionChannel", channelId);
+    reply->setProperty("reactionTimestamp", ts);
 }
 
 void SlackAPI::removeReaction(const QString &channelId, const QString &ts, const QString &emoji)
@@ -198,7 +201,10 @@ void SlackAPI::removeReaction(const QString &channelId, const QString &ts, const
     params["timestamp"] = ts;
     params["name"] = emoji;
 
-    makeApiRequest("reactions.remove", params);
+    QNetworkReply *reply = makeApiRequest("reactions.remove", params);
+    // Store channel and timestamp for later refresh
+    reply->setProperty("reactionChannel", channelId);
+    reply->setProperty("reactionTimestamp", ts);
 }
 
 void SlackAPI::fetchUsers()
@@ -423,6 +429,16 @@ void SlackAPI::processApiResponse(const QString &endpoint, const QJsonObject &re
     } else if (endpoint == "conversations.history") {
         QJsonArray messages = response["messages"].toArray();
 
+        // Check if this is a single message fetch (for updating after reaction changes)
+        bool fetchingSingle = reply->property("fetchingSingleMessage").toBool();
+        if (fetchingSingle && messages.count() > 0) {
+            // This is a single message update request
+            QJsonObject updatedMessage = messages[0].toObject();
+            qDebug() << "CONVERSATIONS.HISTORY (single): Emitting messageUpdated signal";
+            emit messageUpdated(updatedMessage);
+            return;
+        }
+
         // Check if this is a request from checkForNewMessages (for notification detection)
         QString checkingChannel = reply->property("checkingChannel").toString();
         if (!checkingChannel.isEmpty() && messages.count() > 0) {
@@ -474,12 +490,21 @@ void SlackAPI::processApiResponse(const QString &endpoint, const QJsonObject &re
 
     } else if (endpoint == "reactions.add") {
         qDebug() << "REACTIONS.ADD: Reaction added successfully";
-        // Reaction added successfully - the WebSocket will notify us of the change
-        // or we can fetch the conversation history again to update the UI
+        // Fetch the updated message to refresh the UI
+        QString channelId = reply->property("reactionChannel").toString();
+        QString timestamp = reply->property("reactionTimestamp").toString();
+        if (!channelId.isEmpty() && !timestamp.isEmpty()) {
+            fetchSingleMessage(channelId, timestamp);
+        }
 
     } else if (endpoint == "reactions.remove") {
         qDebug() << "REACTIONS.REMOVE: Reaction removed successfully";
-        // Reaction removed successfully - the WebSocket will notify us of the change
+        // Fetch the updated message to refresh the UI
+        QString channelId = reply->property("reactionChannel").toString();
+        QString timestamp = reply->property("reactionTimestamp").toString();
+        if (!channelId.isEmpty() && !timestamp.isEmpty()) {
+            fetchSingleMessage(channelId, timestamp);
+        }
 
     } else if (endpoint == "rtm.connect") {
         qDebug() << "RTM connect response received";
@@ -574,5 +599,23 @@ void SlackAPI::checkForNewMessages(const QString &channelId)
     if (reply) {
         // Store the channel ID in the reply so we can identify it when the response comes back
         reply->setProperty("checkingChannel", channelId);
+    }
+}
+
+void SlackAPI::fetchSingleMessage(const QString &channelId, const QString &timestamp)
+{
+    qDebug() << "SlackAPI: Fetching single message" << timestamp << "from channel" << channelId;
+
+    // Fetch a specific message by timestamp
+    QJsonObject params;
+    params["channel"] = channelId;
+    params["latest"] = timestamp;
+    params["inclusive"] = true;
+    params["limit"] = 1;
+
+    QNetworkReply *reply = makeApiRequest("conversations.history", params);
+    if (reply) {
+        // Mark this as a single message fetch for updating
+        reply->setProperty("fetchingSingleMessage", true);
     }
 }
