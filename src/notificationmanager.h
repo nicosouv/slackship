@@ -5,6 +5,8 @@
 #include <notification.h>
 #include <QJsonObject>
 
+class AppSettings;
+
 class NotificationManager : public QObject
 {
     Q_OBJECT
@@ -13,6 +15,8 @@ class NotificationManager : public QObject
 public:
     explicit NotificationManager(QObject *parent = nullptr);
     ~NotificationManager();
+
+    void setAppSettings(AppSettings *settings);
 
     bool enabled() const { return m_enabled; }
     void setEnabled(bool enabled);
@@ -44,9 +48,11 @@ private:
                          const QString &body,
                          const QString &channelId,
                          bool isMention = false);
+    bool isInDoNotDisturbPeriod() const;
 
     bool m_enabled;
     QHash<QString, Notification*> m_activeNotifications;
+    AppSettings *m_appSettings;
 };
 
 #endif // NOTIFICATIONMANAGER_H

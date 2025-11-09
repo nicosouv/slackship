@@ -394,6 +394,39 @@ ListItem {
     }
 
     menu: ContextMenu {
+        // Quick reactions row
+        Row {
+            width: parent.width
+            height: Theme.itemSizeSmall
+            spacing: Theme.paddingMedium
+            anchors.horizontalCenter: parent.horizontalCenter
+
+            Repeater {
+                model: ["👍", "❤️", "😂", "🎉", "👀"]
+
+                BackgroundItem {
+                    width: Theme.itemSizeSmall
+                    height: Theme.itemSizeSmall
+
+                    Label {
+                        anchors.centerIn: parent
+                        text: modelData
+                        font.pixelSize: Theme.fontSizeLarge
+                    }
+
+                    onClicked: {
+                        var reactionName = EmojiHelper.emojiToReactionName(modelData)
+                        slackAPI.addReaction(messageChannelId, messageTimestamp, reactionName)
+                        messageItem.hideMenu()
+                    }
+                }
+            }
+        }
+
+        MenuLabel {
+            text: qsTr("Quick reactions")
+        }
+
         MenuItem {
             text: qsTr("Reply in thread")
             onClicked: {

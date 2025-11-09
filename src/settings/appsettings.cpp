@@ -132,3 +132,73 @@ void AppSettings::setGroupsSectionExpanded(bool expanded)
         emit groupsSectionExpandedChanged();
     }
 }
+
+bool AppSettings::dndEnabled() const
+{
+    // Default to disabled (false)
+    return m_settings.value("notifications/dndEnabled", false).toBool();
+}
+
+void AppSettings::setDndEnabled(bool enabled)
+{
+    if (dndEnabled() != enabled) {
+        m_settings.setValue("notifications/dndEnabled", enabled);
+        emit dndEnabledChanged();
+    }
+}
+
+int AppSettings::dndStartHour() const
+{
+    // Default to 22:00 (10 PM)
+    return m_settings.value("notifications/dndStartHour", 22).toInt();
+}
+
+void AppSettings::setDndStartHour(int hour)
+{
+    if (dndStartHour() != hour && hour >= 0 && hour < 24) {
+        m_settings.setValue("notifications/dndStartHour", hour);
+        emit dndStartHourChanged();
+    }
+}
+
+int AppSettings::dndStartMinute() const
+{
+    // Default to :00
+    return m_settings.value("notifications/dndStartMinute", 0).toInt();
+}
+
+void AppSettings::setDndStartMinute(int minute)
+{
+    if (dndStartMinute() != minute && minute >= 0 && minute < 60) {
+        m_settings.setValue("notifications/dndStartMinute", minute);
+        emit dndStartMinuteChanged();
+    }
+}
+
+int AppSettings::dndEndHour() const
+{
+    // Default to 08:00 (8 AM)
+    return m_settings.value("notifications/dndEndHour", 8).toInt();
+}
+
+void AppSettings::setDndEndHour(int hour)
+{
+    if (dndEndHour() != hour && hour >= 0 && hour < 24) {
+        m_settings.setValue("notifications/dndEndHour", hour);
+        emit dndEndHourChanged();
+    }
+}
+
+int AppSettings::dndEndMinute() const
+{
+    // Default to :00
+    return m_settings.value("notifications/dndEndMinute", 0).toInt();
+}
+
+void AppSettings::setDndEndMinute(int minute)
+{
+    if (dndEndMinute() != minute && minute >= 0 && minute < 60) {
+        m_settings.setValue("notifications/dndEndMinute", minute);
+        emit dndEndMinuteChanged();
+    }
+}

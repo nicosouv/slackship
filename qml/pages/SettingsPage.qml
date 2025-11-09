@@ -84,6 +84,57 @@ Page {
                 onCheckedChanged: appSettings.soundEnabled = checked
             }
 
+            TextSwitch {
+                id: dndSwitch
+                text: qsTr("Do Not Disturb")
+                description: qsTr("Silence notifications during quiet hours")
+                checked: appSettings.dndEnabled !== undefined ? appSettings.dndEnabled : false
+                enabled: appSettings.notificationsEnabled
+                onCheckedChanged: appSettings.dndEnabled = checked
+            }
+
+            ValueButton {
+                label: qsTr("Quiet hours start")
+                value: {
+                    var hour = appSettings.dndStartHour !== undefined ? appSettings.dndStartHour : 22
+                    var minute = appSettings.dndStartMinute !== undefined ? appSettings.dndStartMinute : 0
+                    return ("0" + hour).slice(-2) + ":" + ("0" + minute).slice(-2)
+                }
+                enabled: appSettings.notificationsEnabled && dndSwitch.checked
+                onClicked: {
+                    var dialog = pageStack.push("Sailfish.Silica.TimePickerDialog", {
+                        hourMode: DateTime.TwentyFourHours,
+                        hour: appSettings.dndStartHour !== undefined ? appSettings.dndStartHour : 22,
+                        minute: appSettings.dndStartMinute !== undefined ? appSettings.dndStartMinute : 0
+                    })
+                    dialog.accepted.connect(function() {
+                        appSettings.dndStartHour = dialog.hour
+                        appSettings.dndStartMinute = dialog.minute
+                    })
+                }
+            }
+
+            ValueButton {
+                label: qsTr("Quiet hours end")
+                value: {
+                    var hour = appSettings.dndEndHour !== undefined ? appSettings.dndEndHour : 8
+                    var minute = appSettings.dndEndMinute !== undefined ? appSettings.dndEndMinute : 0
+                    return ("0" + hour).slice(-2) + ":" + ("0" + minute).slice(-2)
+                }
+                enabled: appSettings.notificationsEnabled && dndSwitch.checked
+                onClicked: {
+                    var dialog = pageStack.push("Sailfish.Silica.TimePickerDialog", {
+                        hourMode: DateTime.TwentyFourHours,
+                        hour: appSettings.dndEndHour !== undefined ? appSettings.dndEndHour : 8,
+                        minute: appSettings.dndEndMinute !== undefined ? appSettings.dndEndMinute : 0
+                    })
+                    dialog.accepted.connect(function() {
+                        appSettings.dndEndHour = dialog.hour
+                        appSettings.dndEndMinute = dialog.minute
+                    })
+                }
+            }
+
             SectionHeader {
                 text: qsTr("Account")
             }

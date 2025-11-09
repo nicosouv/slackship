@@ -1,10 +1,18 @@
 #include "notificationmanager.h"
+#include "settings/appsettings.h"
 #include <QDebug>
+#include <QTime>
 
 NotificationManager::NotificationManager(QObject *parent)
     : QObject(parent)
     , m_enabled(true)
+    , m_appSettings(nullptr)
 {
+}
+
+void NotificationManager::setAppSettings(AppSettings *settings)
+{
+    m_appSettings = settings;
 }
 
 NotificationManager::~NotificationManager()
@@ -33,6 +41,12 @@ void NotificationManager::showMessageNotification(const QString &channelName,
         return;
     }
 
+    // Check if we're in Do Not Disturb period
+    if (isInDoNotDisturbPeriod()) {
+        qDebug() << "DND active - suppressing message notification";
+        return;
+    }
+
     QString summary = QString("%1 in #%2").arg(userName, channelName);
     showNotification(summary, messageText, channelId, false);
 }
@@ -43,6 +57,12 @@ void NotificationManager::showMentionNotification(const QString &channelName,
                                                  const QString &channelId)
 {
     if (!m_enabled) {
+        return;
+    }
+
+    // Check if we're in Do Not Disturb period
+    if (isInDoNotDisturbPeriod()) {
+        qDebug() << "DND active - suppressing mention notification";
         return;
     }
 
@@ -205,4 +225,25 @@ void NotificationManager::showNotification(const QString &summary,
 
     qDebug() << "Notification published:" << summary << "-" << body;
     qDebug() << "=== END SHOW NOTIFICATION ===";
+}
+
+bool NotificationManager::isInDoNotDisturbPeriod() const
+{
+    // If no settings or DND is disabled, return false
+    if (!m_appSettings || !m_appSettings->dndEnabled()) {
+        return false;
+    }
+
+    QTime now = QTime::currentTime();
+    QTime startTime(m_appSettings->dndStartHour(), m_appSettings->dndStartMinute());
+    QTime endTime(m_appSettings->dndEndHour(), m_appSettings->dndEndMinute());
+
+    // Handle case where DND period crosses midnight (e.g., 22:00 to 08:00)
+    if (startTime > endTime) {
+        // DND is active if current time is after start OR before end
+        return now >= startTime || now < endTime;
+    } else {
+        // Normal case: DND is active if current time is between start and end
+        return now >= startTime && now < endTime;
+    }
 }

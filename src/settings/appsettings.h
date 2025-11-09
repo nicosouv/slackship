@@ -17,6 +17,13 @@ class AppSettings : public QObject
     Q_PROPERTY(bool dmsSectionExpanded READ dmsSectionExpanded WRITE setDmsSectionExpanded NOTIFY dmsSectionExpandedChanged)
     Q_PROPERTY(bool groupsSectionExpanded READ groupsSectionExpanded WRITE setGroupsSectionExpanded NOTIFY groupsSectionExpandedChanged)
 
+    // Do Not Disturb settings
+    Q_PROPERTY(bool dndEnabled READ dndEnabled WRITE setDndEnabled NOTIFY dndEnabledChanged)
+    Q_PROPERTY(int dndStartHour READ dndStartHour WRITE setDndStartHour NOTIFY dndStartHourChanged)
+    Q_PROPERTY(int dndStartMinute READ dndStartMinute WRITE setDndStartMinute NOTIFY dndStartMinuteChanged)
+    Q_PROPERTY(int dndEndHour READ dndEndHour WRITE setDndEndHour NOTIFY dndEndHourChanged)
+    Q_PROPERTY(int dndEndMinute READ dndEndMinute WRITE setDndEndMinute NOTIFY dndEndMinuteChanged)
+
 public:
     explicit AppSettings(QObject *parent = nullptr);
 
@@ -51,6 +58,22 @@ public:
     bool groupsSectionExpanded() const;
     void setGroupsSectionExpanded(bool expanded);
 
+    // Do Not Disturb
+    bool dndEnabled() const;
+    void setDndEnabled(bool enabled);
+
+    int dndStartHour() const;
+    void setDndStartHour(int hour);
+
+    int dndStartMinute() const;
+    void setDndStartMinute(int minute);
+
+    int dndEndHour() const;
+    void setDndEndHour(int hour);
+
+    int dndEndMinute() const;
+    void setDndEndMinute(int minute);
+
 signals:
     void notificationsEnabledChanged();
     void soundEnabledChanged();
@@ -61,6 +84,11 @@ signals:
     void channelsSectionExpandedChanged();
     void dmsSectionExpandedChanged();
     void groupsSectionExpandedChanged();
+    void dndEnabledChanged();
+    void dndStartHourChanged();
+    void dndStartMinuteChanged();
+    void dndEndHourChanged();
+    void dndEndMinuteChanged();
 
 private:
     QSettings m_settings;
