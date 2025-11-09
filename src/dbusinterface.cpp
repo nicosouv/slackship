@@ -1,5 +1,6 @@
 #include "dbusinterface.h"
 #include <QDBusConnection>
+#include <QDBusError>
 #include <QDebug>
 
 DBusInterface::DBusInterface(QObject *parent)
