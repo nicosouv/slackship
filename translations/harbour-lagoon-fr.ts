@@ -199,12 +199,17 @@
         <translation>Déconnecté</translation>
     </message>
     <message>
-        <location filename="../qml/pages/FirstPage.qml" line="93"/>
+        <location filename="../qml/pages/FirstPage.qml" line="182"/>
+        <source>No matching conversations</source>
+        <translation>Aucune conversation correspondante</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/FirstPage.qml" line="182"/>
         <source>No conversations</source>
         <translation>Aucune conversation</translation>
     </message>
     <message>
-        <location filename="../qml/pages/FirstPage.qml" line="94"/>
+        <location filename="../qml/pages/FirstPage.qml" line="183"/>
         <source>Pull down to refresh</source>
         <translation>Tirer vers le bas pour actualiser</translation>
     </message>

@@ -238,7 +238,7 @@ Page {
 
             Label {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: "Lagoon v0.31.1"
+                text: "Lagoon v0.32.3"
                 font.pixelSize: Theme.fontSizeExtraSmall
                 color: Theme.secondaryColor
                 opacity: 0.6

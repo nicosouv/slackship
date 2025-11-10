@@ -218,7 +218,11 @@ void ConversationModel::sortConversations()
 {
     std::sort(m_conversations.begin(), m_conversations.end(),
               [](const Conversation &a, const Conversation &b) {
-        // Priority 0: Type (channels first, then group messages, then DMs)
+        // Priority 0: Starred items first (all together at the top)
+        if (a.isStarred && !b.isStarred) return true;
+        if (!a.isStarred && b.isStarred) return false;
+
+        // Priority 1: Type (channels first, then group messages, then DMs)
         // channel/group = 0, mpim = 1, im = 2
         auto getTypePriority = [](const QString &type) {
             if (type == "channel" || type == "group") return 0;
@@ -230,7 +234,7 @@ void ConversationModel::sortConversations()
         int bPriority = getTypePriority(b.type);
         if (aPriority != bPriority) return aPriority < bPriority;
 
-        // Priority 1: Unread messages (descending by count)
+        // Priority 2: Unread messages (descending by count)
         if (a.unreadCount > 0 && b.unreadCount == 0) return true;
         if (a.unreadCount == 0 && b.unreadCount > 0) return false;
         if (a.unreadCount > 0 && b.unreadCount > 0) {
@@ -238,10 +242,6 @@ void ConversationModel::sortConversations()
                 return a.unreadCount > b.unreadCount;
             }
         }
-
-        // Priority 2: Starred channels
-        if (a.isStarred && !b.isStarred) return true;
-        if (!a.isStarred && b.isStarred) return false;
 
         // Priority 3: Alphabetical by name
         return a.name.toLower() < b.name.toLower();

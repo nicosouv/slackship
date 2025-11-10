@@ -11,6 +11,7 @@ Page {
 
     property bool isLoading: false
     property string searchText: ""
+    property int visibleConversationCount: 0
 
     Component.onCompleted: {
         console.log("FirstPage loaded - fetching conversations")
@@ -22,6 +23,9 @@ Page {
 
         // Attach StatsPage to the right
         pageStack.pushAttached(Qt.resolvedUrl("StatsPage.qml"))
+
+        // Update visible count initially
+        updateVisibleCount()
     }
 
     // Listen for workspace switches
@@ -45,6 +49,7 @@ Page {
         target: slackAPI
         onConversationsReceived: {
             isLoading = false
+            updateVisibleCount()
         }
     }
 
@@ -58,6 +63,18 @@ Page {
     function matchesSearch(name) {
         if (searchText.length === 0) return true
         return name.toLowerCase().indexOf(searchText.toLowerCase()) >= 0
+    }
+
+    // Update visible conversation count
+    function updateVisibleCount() {
+        var count = 0
+        for (var i = 0; i < conversationModel.rowCount(); i++) {
+            var conv = conversationModel.get(i)
+            if (matchesSearch(conv.name)) {
+                count++
+            }
+        }
+        visibleConversationCount = count
     }
 
     SilicaListView {
@@ -101,7 +118,10 @@ Page {
                 id: searchField
                 width: parent.width
                 placeholderText: qsTr("Filter conversations...")
-                onTextChanged: searchText = text
+                onTextChanged: {
+                    searchText = text
+                    updateVisibleCount()
+                }
 
                 EnterKey.iconSource: "image://theme/icon-m-enter-close"
                 EnterKey.onClicked: focus = false
@@ -158,10 +178,9 @@ Page {
         }
 
         ViewPlaceholder {
-            enabled: conversationModel.rowCount() === 0 && !isLoading
-            text: qsTr("No conversations")
+            enabled: visibleConversationCount === 0 && !isLoading
+            text: searchText.length > 0 ? qsTr("No matching conversations") : qsTr("No conversations")
             hintText: qsTr("Pull down to refresh")
-            visible: enabled
         }
 
         VerticalScrollDecorator { }
