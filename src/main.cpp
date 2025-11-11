@@ -40,25 +40,18 @@ int main(int argc, char *argv[])
     // If no language is set, use system locale
     if (language.isEmpty()) {
         language = QLocale::system().name();
-        qDebug() << "Using system locale:" << language;
-    } else {
-        qDebug() << "Using configured language:" << language;
     }
 
     // Try to load the translation file
     QString translationFile = QString("harbour-lagoon-%1").arg(language);
     if (translator->load(translationFile, SailfishApp::pathTo("translations").toLocalFile())) {
         app->installTranslator(translator.data());
-        qDebug() << "Loaded translation:" << translationFile;
     } else {
         // Try loading just the language code (e.g., "fr" instead of "fr_FR")
         QString shortLang = language.left(2);
         translationFile = QString("harbour-lagoon-%1").arg(shortLang);
         if (translator->load(translationFile, SailfishApp::pathTo("translations").toLocalFile())) {
             app->installTranslator(translator.data());
-            qDebug() << "Loaded translation:" << translationFile;
-        } else {
-            qDebug() << "No translation found for:" << language << ", using English";
         }
     }
 
@@ -88,7 +81,6 @@ int main(int argc, char *argv[])
     QObject::connect(slackAPI, &SlackAPI::tokenChanged,
                      [imageProvider, slackAPI]() {
         imageProvider->setToken(slackAPI->token());
-        qDebug() << "Image provider: Token updated";
     });
     // Set initial token if already authenticated
     if (!slackAPI->token().isEmpty()) {
@@ -114,20 +106,17 @@ int main(int argc, char *argv[])
     QObject::connect(slackAPI, &SlackAPI::teamIdChanged,
                      statsManager, [statsManager, slackAPI]() {
         statsManager->setCurrentWorkspace(slackAPI->teamId());
-        qDebug() << "Stats: Set workspace to" << slackAPI->teamId();
     });
 
     QObject::connect(slackAPI, &SlackAPI::currentUserChanged,
                      statsManager, [statsManager, slackAPI]() {
         statsManager->setCurrentUserId(slackAPI->currentUserId());
-        qDebug() << "Stats: Set user ID to" << slackAPI->currentUserId();
     });
 
     // Connect conversation model to API for starred channels persistence
     QObject::connect(slackAPI, &SlackAPI::teamIdChanged,
                      conversationModel, [conversationModel, slackAPI]() {
         conversationModel->setTeamId(slackAPI->teamId());
-        qDebug() << "ConversationModel: Set team ID to" << slackAPI->teamId();
     });
 
     // Connect API to models
@@ -173,8 +162,6 @@ int main(int argc, char *argv[])
     // Connect newUnreadMessages signal to notifications (from polling)
     QObject::connect(slackAPI, &SlackAPI::newUnreadMessages,
                      [notificationManager, conversationModel, userModel](const QString &channelId, int newCount) {
-        qDebug() << "New unread messages detected in" << channelId << ", count:" << newCount;
-
         // Update unread count in conversation model (for CoverPage and bold channels)
         conversationModel->updateUnreadCount(channelId, newCount);
 

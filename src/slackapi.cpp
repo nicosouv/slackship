@@ -37,7 +37,6 @@ SlackAPI::SlackAPI(QObject *parent)
     for (const QString &key : keys) {
         m_lastSeenTimestamps[key] = m_timestampSettings.value(key).toString();
     }
-    qDebug() << "Loaded" << m_lastSeenTimestamps.size() << "persisted message timestamps";
 }
 
 SlackAPI::~SlackAPI()
@@ -49,16 +48,12 @@ void SlackAPI::authenticate(const QString &token)
     m_token = token;
     emit tokenChanged();
 
-    qDebug() << "=== AUTHENTICATE CALLED ===";
-    qDebug() << "Token length:" << m_token.length();
-
     // Test authentication with auth.test endpoint
     QUrl url(API_BASE_URL + "auth.test");
     QNetworkRequest request(url);
     request.setRawHeader("Authorization", QString("Bearer %1").arg(m_token).toUtf8());
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 
-    qDebug() << "Sending auth.test request to:" << url.toString();
     m_networkManager->get(request);
 }
 
@@ -203,8 +198,6 @@ void SlackAPI::deleteMessage(const QString &channelId, const QString &ts)
 
 void SlackAPI::addReaction(const QString &channelId, const QString &ts, const QString &emoji)
 {
-    qDebug() << "SlackAPI: Adding reaction" << emoji << "to message" << ts << "in channel" << channelId;
-
     QJsonObject params;
     params["channel"] = channelId;
     params["timestamp"] = ts;
@@ -218,8 +211,6 @@ void SlackAPI::addReaction(const QString &channelId, const QString &ts, const QS
 
 void SlackAPI::removeReaction(const QString &channelId, const QString &ts, const QString &emoji)
 {
-    qDebug() << "SlackAPI: Removing reaction" << emoji << "from message" << ts << "in channel" << channelId;
-
     QJsonObject params;
     params["channel"] = channelId;
     params["timestamp"] = ts;
@@ -267,7 +258,6 @@ void SlackAPI::connectWebSocket()
         return;
     }
 
-    qDebug() << "Requesting RTM WebSocket URL...";
     // Use rtm.connect for user tokens (xoxp-) instead of apps.connections.open (which requires bot tokens)
     makeApiRequest("rtm.connect");
 }
@@ -281,12 +271,8 @@ void SlackAPI::handleNetworkReply(QNetworkReply *reply)
 {
     reply->deleteLater();
 
-    qDebug() << "=== NETWORK REPLY RECEIVED ===";
-    qDebug() << "URL:" << reply->url().toString();
-    qDebug() << "Error:" << reply->error();
-
     if (reply->error() != QNetworkReply::NoError) {
-        qDebug() << "Network error:" << reply->errorString();
+        qWarning() << "Network error:" << reply->errorString();
         emit networkError(reply->errorString());
         return;
     }
@@ -299,32 +285,26 @@ void SlackAPI::handleNetworkReply(QNetworkReply *reply)
     qint64 requestSize = reply->request().url().toString().toUtf8().size() + 200; // ~200 bytes for headers
     trackBandwidth(bytesReceived + requestSize);
 
-    qDebug() << "Response data:" << data;
-    qDebug() << "Bytes received:" << bytesReceived << "+ request:" << requestSize << "=" << (bytesReceived + requestSize);
-
     QJsonDocument doc = QJsonDocument::fromJson(data);
 
     if (!doc.isObject()) {
-        qDebug() << "Response is not a JSON object";
+        qWarning() << "Response is not a JSON object";
         emit apiError("Invalid response from Slack API");
         return;
     }
 
     QJsonObject response = doc.object();
-    qDebug() << "Response 'ok' field:" << response["ok"].toBool();
 
     if (!response["ok"].toBool()) {
         QString error = response["error"].toString();
-        qDebug() << "API error:" << error;
+        qWarning() << "API error:" << error;
         emit apiError(error);
         return;
     }
 
     // Extract endpoint from reply URL
     QString endpoint = reply->url().path();
-    qDebug() << "Full path:" << endpoint;
     endpoint.remove("/api/");
-    qDebug() << "Extracted endpoint:" << endpoint;
 
     processApiResponse(endpoint, response, reply);
 }
@@ -469,7 +449,6 @@ void SlackAPI::processApiResponse(const QString &endpoint, const QJsonObject &re
         if (fetchingSingle && messages.count() > 0) {
             // This is a single message update request
             QJsonObject updatedMessage = messages[0].toObject();
-            qDebug() << "CONVERSATIONS.HISTORY (single): Emitting messageUpdated signal";
             emit messageUpdated(updatedMessage);
             return;
         }
@@ -482,33 +461,25 @@ void SlackAPI::processApiResponse(const QString &endpoint, const QJsonObject &re
             QString latestTs = latestMessage["ts"].toString();
             QString lastSeenTs = getLastSeenTimestamp(checkingChannel);
 
-            qDebug() << "=== NEW MESSAGE CHECK ===" << checkingChannel;
-            qDebug() << "Latest message ts:" << latestTs;
-            qDebug() << "Last seen ts:" << lastSeenTs;
-
             if (!latestTs.isEmpty()) {
                 double latestDouble = latestTs.toDouble();
                 double lastSeenDouble = lastSeenTs.toDouble();
 
                 if (latestDouble > lastSeenDouble) {
                     // New message detected!
-                    qDebug() << "NEW MESSAGE DETECTED in" << checkingChannel;
                     emit newUnreadMessages(checkingChannel, 1);
                 }
 
                 // Update the last seen timestamp
                 setLastSeenTimestamp(checkingChannel, latestTs);
             }
-            qDebug() << "======================";
         } else {
             // Regular conversation history request (for UI)
-            qDebug() << "CONVERSATIONS.HISTORY: Emitting messagesReceived signal with" << messages.count() << "messages";
             emit messagesReceived(messages);
         }
 
     } else if (endpoint == "conversations.replies") {
         QJsonArray messages = response["messages"].toArray();
-        qDebug() << "CONVERSATIONS.REPLIES: Emitting threadRepliesReceived signal with" << messages.count() << "messages";
         emit threadRepliesReceived(messages);
 
     } else if (endpoint == "users.list") {
@@ -520,11 +491,9 @@ void SlackAPI::processApiResponse(const QString &endpoint, const QJsonObject &re
         emit userInfoReceived(user);
 
     } else if (endpoint == "search.messages") {
-        qDebug() << "SEARCH.MESSAGES: Emitting searchResultsReceived signal";
         emit searchResultsReceived(response);
 
     } else if (endpoint == "reactions.add") {
-        qDebug() << "REACTIONS.ADD: Reaction added successfully";
         // Fetch the updated message to refresh the UI
         QString channelId = reply->property("reactionChannel").toString();
         QString timestamp = reply->property("reactionTimestamp").toString();
@@ -533,7 +502,6 @@ void SlackAPI::processApiResponse(const QString &endpoint, const QJsonObject &re
         }
 
     } else if (endpoint == "reactions.remove") {
-        qDebug() << "REACTIONS.REMOVE: Reaction removed successfully";
         // Fetch the updated message to refresh the UI
         QString channelId = reply->property("reactionChannel").toString();
         QString timestamp = reply->property("reactionTimestamp").toString();
@@ -542,7 +510,6 @@ void SlackAPI::processApiResponse(const QString &endpoint, const QJsonObject &re
         }
 
     } else if (endpoint == "conversations.leave") {
-        qDebug() << "CONVERSATIONS.LEAVE: Left channel successfully";
         QString channelId = reply->property("leftChannelId").toString();
         if (!channelId.isEmpty()) {
             emit conversationLeft(channelId);

@@ -72,40 +72,26 @@ QHash<int, QByteArray> MessageModel::roleNames() const
 
 void MessageModel::setCurrentChannelId(const QString &channelId)
 {
-    qDebug() << "=== MessageModel::setCurrentChannelId CALLED ===";
-    qDebug() << "Old channel ID:" << m_currentChannelId;
-    qDebug() << "New channel ID:" << channelId;
-
     if (m_currentChannelId != channelId) {
         m_currentChannelId = channelId;
-        qDebug() << "Channel changed, clearing messages";
         clear();
         emit currentChannelIdChanged();
-    } else {
-        qDebug() << "Channel ID unchanged, not clearing";
     }
 }
 
 void MessageModel::updateMessages(const QJsonArray &messages)
 {
-    qDebug() << "===  MessageModel::updateMessages CALLED ===";
-    qDebug() << "Current channel ID:" << m_currentChannelId;
-    qDebug() << "Received" << messages.count() << "messages";
-
     beginResetModel();
     m_messages.clear();
 
     for (const QJsonValue &value : messages) {
         if (value.isObject()) {
             Message msg = parseMessage(value.toObject());
-            qDebug() << "  - Parsed message:" << msg.text << "from user:" << msg.userId << "ts:" << msg.timestamp;
             m_messages.append(msg);
         }
     }
 
-    qDebug() << "Total messages in model:" << m_messages.count();
     endResetModel();
-    qDebug() << "Model reset complete, rowCount():" << rowCount();
 }
 
 void MessageModel::addMessage(const QJsonObject &message)
@@ -141,12 +127,9 @@ void MessageModel::removeMessage(const QString &messageId)
 
 void MessageModel::clear()
 {
-    qDebug() << "=== MessageModel::clear() CALLED ===";
-    qDebug() << "Clearing" << m_messages.count() << "messages";
     beginResetModel();
     m_messages.clear();
     endResetModel();
-    qDebug() << "Clear complete, rowCount():" << rowCount();
 }
 
 int MessageModel::findMessageIndex(const QString &timestamp) const
@@ -174,6 +157,30 @@ MessageModel::Message MessageModel::parseMessage(const QJsonObject &json) const
     msg.isEdited = json["edited"].isObject();
     msg.isOwnMessage = false; // Will be set based on current user
     msg.channelId = m_currentChannelId; // Set from the current channel context
+
+    // Debug image attachments and files
+    if (!msg.attachments.isEmpty()) {
+        qDebug() << "[IMAGE DEBUG] Message" << msg.timestamp << "has" << msg.attachments.count() << "attachments";
+        for (const QJsonValue &att : msg.attachments) {
+            QJsonObject attObj = att.toObject();
+            qDebug() << "  - Attachment:" << attObj.keys();
+            if (attObj.contains("image_url")) {
+                qDebug() << "    image_url:" << attObj["image_url"].toString();
+            }
+            if (attObj.contains("thumb_url")) {
+                qDebug() << "    thumb_url:" << attObj["thumb_url"].toString();
+            }
+        }
+    }
+    if (!msg.files.isEmpty()) {
+        qDebug() << "[IMAGE DEBUG] Message" << msg.timestamp << "has" << msg.files.count() << "files";
+        for (const QJsonValue &file : msg.files) {
+            QJsonObject fileObj = file.toObject();
+            qDebug() << "  - File:" << fileObj["name"].toString() << "mimetype:" << fileObj["mimetype"].toString();
+            qDebug() << "    url_private:" << fileObj["url_private"].toString();
+            qDebug() << "    thumb_360:" << fileObj["thumb_360"].toString();
+        }
+    }
 
     return msg;
 }
