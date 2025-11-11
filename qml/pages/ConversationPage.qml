@@ -167,6 +167,15 @@ Page {
                 }
             }
             MenuItem {
+                text: qsTr("Pins & Bookmarks")
+                onClicked: {
+                    pageStack.push(Qt.resolvedUrl("PinsAndBookmarksPage.qml"), {
+                        channelId: conversationPage.channelId,
+                        channelName: conversationPage.channelName
+                    })
+                }
+            }
+            MenuItem {
                 text: qsTr("Search")
                 onClicked: {
                     pageStack.push(Qt.resolvedUrl("SearchPage.qml"), {

@@ -67,9 +67,21 @@ public slots:
     void addReaction(const QString &channelId, const QString &ts, const QString &emoji);
     void removeReaction(const QString &channelId, const QString &ts, const QString &emoji);
 
+    // Pins
+    void fetchPins(const QString &channelId);
+    void addPin(const QString &channelId, const QString &timestamp);
+    void removePin(const QString &channelId, const QString &timestamp);
+
+    // Bookmarks
+    void fetchBookmarks(const QString &channelId);
+
+    // Emoji
+    void fetchCustomEmoji();
+
     // Users
     void fetchUsers();
     void fetchUserInfo(const QString &userId);
+    void fetchUserProfile(const QString &userId);  // Enhanced profile with status
 
     // Search
     void searchMessages(const QString &query);
@@ -97,7 +109,11 @@ signals:
     void threadRepliesReceived(const QJsonArray &replies);
     void usersReceived(const QJsonArray &users);
     void userInfoReceived(const QJsonObject &userInfo);
+    void userProfileReceived(const QJsonObject &profile);
     void searchResultsReceived(const QJsonObject &results);
+    void pinsReceived(const QString &channelId, const QJsonArray &pins);
+    void bookmarksReceived(const QString &channelId, const QJsonArray &bookmarks);
+    void customEmojiReceived(const QJsonObject &emoji);
 
     // Real-time signals
     void messageReceived(const QJsonObject &message);

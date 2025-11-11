@@ -368,6 +368,87 @@
         <source>File hidden by workspace limits</source>
         <translation>Archivo oculto por límites del espacio de trabajo</translation>
     </message>
+    <message>
+        <location filename="../qml/components/MessageDelegate.qml" line="506"/>
+        <source>Pin message</source>
+        <translation>Anclar mensaje</translation>
+    </message>
+</context>
+<context>
+    <name>PinsAndBookmarksPage</name>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="38"/>
+        <source>Refresh</source>
+        <translation>Actualizar</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="52"/>
+        <source>Pins & Bookmarks</source>
+        <translation>Anclados y Marcadores</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="58"/>
+        <source>Bookmarks</source>
+        <translation>Marcadores</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="89"/>
+        <source>Untitled</source>
+        <translation>Sin título</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="109"/>
+        <source>No bookmarks</source>
+        <translation>Sin marcadores</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="110"/>
+        <source>Bookmarks appear in the channel header</source>
+        <translation>Los marcadores aparecen en el encabezado del canal</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="115"/>
+        <source>Pinned Messages</source>
+        <translation>Mensajes anclados</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="143"/>
+        <source>File or comment</source>
+        <translation>Archivo o comentario</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="150"/>
+        <source>(no text)</source>
+        <translation>(sin texto)</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="152"/>
+        <source>(unsupported item type)</source>
+        <translation>(tipo de elemento no compatible)</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="162"/>
+        <source>Pinned on</source>
+        <translation>Anclado el</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="176"/>
+        <source>No pins</source>
+        <translation>Sin anclados</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="177"/>
+        <source>Pin important messages to find them quickly</source>
+        <translation>Ancla mensajes importantes para encontrarlos rápidamente</translation>
+    </message>
+</context>
+<context>
+    <name>ConversationPage</name>
+    <message>
+        <location filename="../qml/pages/ConversationPage.qml" line="170"/>
+        <source>Pins & Bookmarks</source>
+        <translation>Anclados y Marcadores</translation>
+    </message>
 </context>
 <context>
     <name>SettingsPage</name>

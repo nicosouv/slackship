@@ -503,6 +503,13 @@ ListItem {
         }
 
         MenuItem {
+            text: qsTr("Pin message")
+            onClicked: {
+                slackAPI.addPin(messageChannelId, messageTimestamp)
+            }
+        }
+
+        MenuItem {
             text: qsTr("Copy text")
             onClicked: {
                 Clipboard.text = model.text

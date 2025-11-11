@@ -368,6 +368,87 @@
         <source>File hidden by workspace limits</source>
         <translation>File nascosto dai limiti dello spazio di lavoro</translation>
     </message>
+    <message>
+        <location filename="../qml/components/MessageDelegate.qml" line="506"/>
+        <source>Pin message</source>
+        <translation>Fissa messaggio</translation>
+    </message>
+</context>
+<context>
+    <name>PinsAndBookmarksPage</name>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="38"/>
+        <source>Refresh</source>
+        <translation>Aggiorna</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="52"/>
+        <source>Pins & Bookmarks</source>
+        <translation>Fissati e Segnalibri</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="58"/>
+        <source>Bookmarks</source>
+        <translation>Segnalibri</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="89"/>
+        <source>Untitled</source>
+        <translation>Senza titolo</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="109"/>
+        <source>No bookmarks</source>
+        <translation>Nessun segnalibro</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="110"/>
+        <source>Bookmarks appear in the channel header</source>
+        <translation>I segnalibri appaiono nell'intestazione del canale</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="115"/>
+        <source>Pinned Messages</source>
+        <translation>Messaggi fissati</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="143"/>
+        <source>File or comment</source>
+        <translation>File o commento</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="150"/>
+        <source>(no text)</source>
+        <translation>(nessun testo)</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="152"/>
+        <source>(unsupported item type)</source>
+        <translation>(tipo di elemento non supportato)</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="162"/>
+        <source>Pinned on</source>
+        <translation>Fissato il</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="176"/>
+        <source>No pins</source>
+        <translation>Nessun messaggio fissato</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="177"/>
+        <source>Pin important messages to find them quickly</source>
+        <translation>Fissa i messaggi importanti per trovarli rapidamente</translation>
+    </message>
+</context>
+<context>
+    <name>ConversationPage</name>
+    <message>
+        <location filename="../qml/pages/ConversationPage.qml" line="170"/>
+        <source>Pins & Bookmarks</source>
+        <translation>Fissati e Segnalibri</translation>
+    </message>
 </context>
 <context>
     <name>SettingsPage</name>

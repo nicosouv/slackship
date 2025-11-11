@@ -238,6 +238,63 @@ void SlackAPI::removeReaction(const QString &channelId, const QString &ts, const
     reply->setProperty("reactionTimestamp", ts);
 }
 
+void SlackAPI::fetchPins(const QString &channelId)
+{
+    QJsonObject params;
+    params["channel"] = channelId;
+
+    QNetworkReply *reply = makeApiRequest("pins.list", params);
+    if (reply) {
+        reply->setProperty("pinsChannelId", channelId);
+    }
+}
+
+void SlackAPI::addPin(const QString &channelId, const QString &timestamp)
+{
+    qDebug() << "Pinning message" << timestamp << "in channel" << channelId;
+
+    QJsonObject params;
+    params["channel"] = channelId;
+    params["timestamp"] = timestamp;
+
+    makeApiRequest("pins.add", params);
+}
+
+void SlackAPI::removePin(const QString &channelId, const QString &timestamp)
+{
+    qDebug() << "Unpinning message" << timestamp << "in channel" << channelId;
+
+    QJsonObject params;
+    params["channel"] = channelId;
+    params["timestamp"] = timestamp;
+
+    makeApiRequest("pins.remove", params);
+}
+
+void SlackAPI::fetchBookmarks(const QString &channelId)
+{
+    QJsonObject params;
+    params["channel_id"] = channelId;
+
+    QNetworkReply *reply = makeApiRequest("bookmarks.list", params);
+    if (reply) {
+        reply->setProperty("bookmarksChannelId", channelId);
+    }
+}
+
+void SlackAPI::fetchCustomEmoji()
+{
+    makeApiRequest("emoji.list", QJsonObject());
+}
+
+void SlackAPI::fetchUserProfile(const QString &userId)
+{
+    QJsonObject params;
+    params["user"] = userId;
+
+    makeApiRequest("users.profile.get", params);
+}
+
 void SlackAPI::fetchUsers()
 {
     makeApiRequest("users.list");
@@ -505,6 +562,29 @@ void SlackAPI::processApiResponse(const QString &endpoint, const QJsonObject &re
     } else if (endpoint == "users.info") {
         QJsonObject user = response["user"].toObject();
         emit userInfoReceived(user);
+
+    } else if (endpoint == "users.profile.get") {
+        QJsonObject profile = response["profile"].toObject();
+        emit userProfileReceived(profile);
+
+    } else if (endpoint == "pins.list") {
+        QString channelId = reply->property("pinsChannelId").toString();
+        QJsonArray items = response["items"].toArray();
+        emit pinsReceived(channelId, items);
+
+    } else if (endpoint == "pins.add" || endpoint == "pins.remove") {
+        // Refresh pins after adding/removing
+        // Could get channel from reply properties if needed
+        qDebug() << "Pin action completed successfully";
+
+    } else if (endpoint == "bookmarks.list") {
+        QString channelId = reply->property("bookmarksChannelId").toString();
+        QJsonArray bookmarks = response["bookmarks"].toArray();
+        emit bookmarksReceived(channelId, bookmarks);
+
+    } else if (endpoint == "emoji.list") {
+        QJsonObject emoji = response["emoji"].toObject();
+        emit customEmojiReceived(emoji);
 
     } else if (endpoint == "search.messages") {
         emit searchResultsReceived(response);

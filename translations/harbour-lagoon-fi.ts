@@ -368,6 +368,87 @@
         <source>File hidden by workspace limits</source>
         <translation>Tiedosto piilotettu työtilan rajoitusten vuoksi</translation>
     </message>
+    <message>
+        <location filename="../qml/components/MessageDelegate.qml" line="506"/>
+        <source>Pin message</source>
+        <translation>Kiinnitä viesti</translation>
+    </message>
+</context>
+<context>
+    <name>PinsAndBookmarksPage</name>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="38"/>
+        <source>Refresh</source>
+        <translation>Päivitä</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="52"/>
+        <source>Pins & Bookmarks</source>
+        <translation>Kiinnitetyt ja kirjanmerkit</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="58"/>
+        <source>Bookmarks</source>
+        <translation>Kirjanmerkit</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="89"/>
+        <source>Untitled</source>
+        <translation>Nimetön</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="109"/>
+        <source>No bookmarks</source>
+        <translation>Ei kirjanmerkkejä</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="110"/>
+        <source>Bookmarks appear in the channel header</source>
+        <translation>Kirjanmerkit näkyvät kanavan otsikossa</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="115"/>
+        <source>Pinned Messages</source>
+        <translation>Kiinnitetyt viestit</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="143"/>
+        <source>File or comment</source>
+        <translation>Tiedosto tai kommentti</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="150"/>
+        <source>(no text)</source>
+        <translation>(ei tekstiä)</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="152"/>
+        <source>(unsupported item type)</source>
+        <translation>(tukematon kohdetyyppi)</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="162"/>
+        <source>Pinned on</source>
+        <translation>Kiinnitetty</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="176"/>
+        <source>No pins</source>
+        <translation>Ei kiinnitettyjä</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinsAndBookmarksPage.qml" line="177"/>
+        <source>Pin important messages to find them quickly</source>
+        <translation>Kiinnitä tärkeät viestit löytääksesi ne nopeasti</translation>
+    </message>
+</context>
+<context>
+    <name>ConversationPage</name>
+    <message>
+        <location filename="../qml/pages/ConversationPage.qml" line="170"/>
+        <source>Pins & Bookmarks</source>
+        <translation>Kiinnitetyt ja kirjanmerkit</translation>
+    </message>
 </context>
 <context>
     <name>SettingsPage</name>
