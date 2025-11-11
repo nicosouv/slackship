@@ -313,8 +313,10 @@ function emojiToTwemojiUrl(emoji, size) {
     // Join codepoints with hyphens
     var codepointStr = codePoints.join("-")
 
-    // Build Twemoji CDN URL
-    return "https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/" + size + "x" + size + "/" + codepointStr + ".png"
+    // Build Twemoji CDN URL (using version 14.0.2)
+    // Available sizes: 72x72, svg
+    var twemojiSize = "72x72"  // Fixed size, since Twemoji only provides 72x72 PNGs
+    return "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/" + twemojiSize + "/" + codepointStr + ".png"
 }
 
 // Get Twemoji URL from Slack reaction name
