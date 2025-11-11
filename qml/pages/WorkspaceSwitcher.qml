@@ -6,6 +6,15 @@ Page {
 
     property var _pageStack: pageStack
 
+    Connections {
+        target: workspaceManager
+        onAllWorkspacesRemoved: {
+            console.log("All workspaces removed from WorkspaceSwitcher - going to login")
+            // Pop this page first
+            workspaceSwitcherPage._pageStack.pop()
+        }
+    }
+
     SilicaListView {
         id: workspaceList
         anchors.fill: parent

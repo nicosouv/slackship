@@ -69,6 +69,7 @@ signals:
     void workspaceAdded(const QString &name);
     void workspaceRemoved(int index);
     void workspaceSwitched(int index, const QString &token);
+    void allWorkspacesRemoved();
 
 private:
     QList<Workspace> m_workspaces;

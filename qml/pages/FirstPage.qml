@@ -42,6 +42,21 @@ Page {
             isLoading = true
             loadWorkspaceData()
         }
+
+        onAllWorkspacesRemoved: {
+            console.log("All workspaces removed - logging out")
+            // Clear all data
+            conversationModel.clear()
+            userModel.clear()
+            messageModel.clear()
+            statsManager.resetStats()
+
+            // Logout from Slack API
+            slackAPI.logout()
+
+            // Navigate to login page
+            pageStack.replace(Qt.resolvedUrl("LoginPage.qml"))
+        }
     }
 
     // Listen for conversations loaded

@@ -172,6 +172,7 @@ void WorkspaceManager::removeWorkspace(int index)
             setCurrentWorkspaceIndex(0);
         } else {
             emit currentWorkspaceChanged();
+            emit allWorkspacesRemoved();
         }
     } else if (m_currentWorkspaceIndex > index) {
         m_currentWorkspaceIndex--;
@@ -179,6 +180,11 @@ void WorkspaceManager::removeWorkspace(int index)
 
     saveWorkspaces();
     emit workspaceRemoved(index);
+
+    // Check if all workspaces have been removed
+    if (m_workspaces.count() == 0) {
+        emit allWorkspacesRemoved();
+    }
 }
 
 void WorkspaceManager::switchWorkspace(int index)
