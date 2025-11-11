@@ -363,6 +363,11 @@
         <source>Deleting</source>
         <translation>Eliminazione</translation>
     </message>
+    <message>
+        <location filename="../qml/components/MessageDelegate.qml" line="96"/>
+        <source>File hidden by workspace limits</source>
+        <translation>File nascosto dai limiti dello spazio di lavoro</translation>
+    </message>
 </context>
 <context>
     <name>SettingsPage</name>

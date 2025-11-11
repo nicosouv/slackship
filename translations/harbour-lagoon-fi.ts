@@ -363,6 +363,11 @@
         <source>Deleting</source>
         <translation>Poistetaan</translation>
     </message>
+    <message>
+        <location filename="../qml/components/MessageDelegate.qml" line="96"/>
+        <source>File hidden by workspace limits</source>
+        <translation>Tiedosto piilotettu työtilan rajoitusten vuoksi</translation>
+    </message>
 </context>
 <context>
     <name>SettingsPage</name>

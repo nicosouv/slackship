@@ -68,6 +68,39 @@ ListItem {
         }
     }
 
+    Component {
+        id: hiddenFileComponent
+        Item {
+            width: parent.width
+            height: hiddenLabel.height + Theme.paddingMedium * 2
+
+            Rectangle {
+                anchors.fill: parent
+                color: Theme.rgba(Theme.secondaryColor, 0.1)
+                radius: Theme.paddingSmall
+            }
+
+            Row {
+                id: hiddenLabel
+                anchors.centerIn: parent
+                spacing: Theme.paddingSmall
+
+                Icon {
+                    source: "image://theme/icon-s-low-importance"
+                    width: Theme.iconSizeSmall
+                    height: Theme.iconSizeSmall
+                    color: Theme.secondaryColor
+                }
+
+                Label {
+                    text: qsTr("File hidden by workspace limits")
+                    color: Theme.secondaryColor
+                    font.pixelSize: Theme.fontSizeExtraSmall
+                }
+            }
+        }
+    }
+
     // Thread tree visualization
     Item {
         anchors.fill: parent
@@ -319,9 +352,9 @@ ListItem {
                     width: messageColumn.width
                     sourceComponent: {
                         var file = modelData
-                        // Skip files hidden by workspace limits
+                        // Show info message for files hidden by workspace limits
                         if (file.mode && file.mode === "hidden_by_limit") {
-                            return null
+                            return hiddenFileComponent
                         }
                         // Check if it's an image file
                         var mimeType = file.mimetype ? file.mimetype.toString() : ""

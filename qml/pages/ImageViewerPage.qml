@@ -7,8 +7,20 @@ Page {
     property string imageUrl: ""
     property string title: ""
     property var copyBanner: null
+    property string finalImageUrl: ""
 
     allowedOrientations: Orientation.All
+
+    Component.onCompleted: {
+        // Check if URL requires Slack authentication
+        if (imageUrl.indexOf("files.slack.com") !== -1) {
+            finalImageUrl = "image://slack/" + imageUrl
+            console.log("ImageViewerPage: Using auth provider: " + finalImageUrl)
+        } else {
+            finalImageUrl = imageUrl
+            console.log("ImageViewerPage: Using direct URL: " + finalImageUrl)
+        }
+    }
 
     SilicaFlickable {
         anchors.fill: parent
@@ -94,7 +106,7 @@ Page {
                             id: imageViewer
                             width: parent.width
                             height: parent.height
-                            source: imageUrl
+                            source: finalImageUrl
                             fillMode: Image.PreserveAspectFit
                             asynchronous: true
                             smooth: true
