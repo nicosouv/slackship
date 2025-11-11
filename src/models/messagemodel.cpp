@@ -179,6 +179,12 @@ MessageModel::Message MessageModel::parseMessage(const QJsonObject &json) const
             qDebug() << "  - File:" << fileObj["name"].toString() << "mimetype:" << fileObj["mimetype"].toString();
             qDebug() << "    url_private:" << fileObj["url_private"].toString();
             qDebug() << "    thumb_360:" << fileObj["thumb_360"].toString();
+
+            // Debug: show all available keys for empty files
+            if (fileObj["name"].toString().isEmpty() && fileObj["mimetype"].toString().isEmpty()) {
+                qDebug() << "    [EMPTY FILE] Available keys:" << fileObj.keys();
+                qDebug() << "    [EMPTY FILE] Full JSON:" << QJsonDocument(fileObj).toJson(QJsonDocument::Compact);
+            }
         }
     }
 

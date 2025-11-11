@@ -62,15 +62,18 @@ BackgroundItem {
     }
 
     function getFileIcon(type) {
-        if (type.startsWith("image/")) {
+        // Convert to string and handle empty/undefined values
+        var typeStr = type ? type.toString() : ""
+
+        if (typeStr.indexOf("image/") === 0) {
             return "image://theme/icon-m-file-image"
-        } else if (type.startsWith("video/")) {
+        } else if (typeStr.indexOf("video/") === 0) {
             return "image://theme/icon-m-file-video"
-        } else if (type.startsWith("audio/")) {
+        } else if (typeStr.indexOf("audio/") === 0) {
             return "image://theme/icon-m-file-audio"
-        } else if (type === "application/pdf") {
+        } else if (typeStr === "application/pdf") {
             return "image://theme/icon-m-file-pdf"
-        } else if (type.includes("document") || type.includes("text")) {
+        } else if (typeStr.indexOf("document") !== -1 || typeStr.indexOf("text") !== -1) {
             return "image://theme/icon-m-file-document"
         } else {
             return "image://theme/icon-m-file-other"
