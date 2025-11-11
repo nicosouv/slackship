@@ -495,15 +495,27 @@ void SlackAPI::processApiResponse(const QString &endpoint, const QJsonObject &re
     } else if (endpoint == "users.conversations") {
         QJsonArray conversations = response["channels"].toArray();
 
-        // For each conversation, check for new messages by fetching the latest message
-        // and comparing timestamps (more sustainable approach)
+        // Use unread_count from conversation data instead of making separate requests
+        // This drastically reduces API calls and avoids rate limiting
         for (const QJsonValue &value : conversations) {
             if (value.isObject()) {
                 QJsonObject conv = value.toObject();
                 QString channelId = conv["id"].toString();
+                int unreadCount = conv["unread_count"].toInt(0);
 
-                // Check if this conversation has new messages
-                checkForNewMessages(channelId);
+                // Only emit signal if there are unread messages
+                if (unreadCount > 0) {
+                    int lastKnownCount = m_lastUnreadCounts.value(channelId, 0);
+
+                    // Only notify if count has changed
+                    if (unreadCount != lastKnownCount) {
+                        int newMessages = unreadCount - lastKnownCount;
+                        if (newMessages > 0) {
+                            emit newUnreadMessages(channelId, newMessages);
+                        }
+                        m_lastUnreadCounts[channelId] = unreadCount;
+                    }
+                }
             }
         }
 
@@ -530,30 +542,8 @@ void SlackAPI::processApiResponse(const QString &endpoint, const QJsonObject &re
             return;
         }
 
-        // Check if this is a request from checkForNewMessages (for notification detection)
-        QString checkingChannel = reply->property("checkingChannel").toString();
-        if (!checkingChannel.isEmpty() && messages.count() > 0) {
-            // This is a new message check for notifications
-            QJsonObject latestMessage = messages[0].toObject();
-            QString latestTs = latestMessage["ts"].toString();
-            QString lastSeenTs = getLastSeenTimestamp(checkingChannel);
-
-            if (!latestTs.isEmpty()) {
-                double latestDouble = latestTs.toDouble();
-                double lastSeenDouble = lastSeenTs.toDouble();
-
-                if (latestDouble > lastSeenDouble) {
-                    // New message detected!
-                    emit newUnreadMessages(checkingChannel, 1);
-                }
-
-                // Update the last seen timestamp
-                setLastSeenTimestamp(checkingChannel, latestTs);
-            }
-        } else {
-            // Regular conversation history request (for UI)
-            emit messagesReceived(messages);
-        }
+        // Regular conversation history request (for UI)
+        emit messagesReceived(messages);
 
     } else if (endpoint == "conversations.replies") {
         QJsonArray messages = response["messages"].toArray();
