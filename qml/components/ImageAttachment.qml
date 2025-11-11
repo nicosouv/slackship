@@ -34,14 +34,21 @@ Item {
             AnimatedImage {
                 id: imageLoader
                 anchors.fill: parent
-                // Use slack:// image provider for authenticated image loading
+                // Use slack:// image provider for authenticated image loading (files.slack.com)
+                // Use direct URL for public images (YouTube, etc.)
                 source: {
                     var url = thumbUrl || imageUrl
                     console.log("ImageAttachment: thumbUrl=" + thumbUrl + ", imageUrl=" + imageUrl)
                     if (url && url.length > 0) {
-                        var finalUrl = "image://slack/" + url
-                        console.log("ImageAttachment: Final source URL=" + finalUrl)
-                        return finalUrl
+                        // Check if URL requires Slack authentication
+                        if (url.indexOf("files.slack.com") !== -1) {
+                            var finalUrl = "image://slack/" + url
+                            console.log("ImageAttachment: Using auth provider: " + finalUrl)
+                            return finalUrl
+                        } else {
+                            console.log("ImageAttachment: Using direct URL: " + url)
+                            return url
+                        }
                     }
                     console.log("ImageAttachment: No URL available")
                     return ""

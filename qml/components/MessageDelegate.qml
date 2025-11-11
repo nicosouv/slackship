@@ -255,7 +255,7 @@ ListItem {
 
                         // Check if current user has reacted
                         isOwnReaction: {
-                            var currentUserId = slackAPI.currentUserId()
+                            var currentUserId = slackAPI.currentUserId
                             var users = modelData.users || []
                             for (var i = 0; i < users.length; i++) {
                                 if (users[i] === currentUserId) {
@@ -267,7 +267,7 @@ ListItem {
 
                         onClicked: {
                             // Check if current user has reacted with this emoji
-                            var currentUserId = slackAPI.currentUserId()
+                            var currentUserId = slackAPI.currentUserId
                             var users = modelData.users || []
                             var hasReacted = false
 
@@ -318,8 +318,8 @@ ListItem {
                     sourceComponent: {
                         var file = modelData
                         // Check if it's an image file
-                        var mimeType = file.mimetype ? String(file.mimetype) : ""
-                        if (mimeType && mimeType.startsWith("image/")) {
+                        var mimeType = file.mimetype ? file.mimetype.toString() : ""
+                        if (mimeType.length > 0 && mimeType.indexOf("image/") === 0) {
                             return imageAttachmentComponent
                         } else {
                             return fileAttachmentComponent
