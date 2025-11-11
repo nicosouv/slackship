@@ -18,7 +18,7 @@ Page {
         tokenEndpoint: "https://slack.com/api/oauth.v2.access"
 
         // Scopes for user token
-        scopes: ["channels:read", "channels:history", "chat:write", "users:read", "im:read", "im:history", "groups:read", "groups:history"]
+        scopes: ["channels:read", "channels:history", "chat:write", "users:read", "im:read", "im:history", "groups:read", "groups:history", "pins:read", "pins:write", "bookmarks:read"]
 
         // Redirect listener port (Amber creates local server)
         redirectListener.port: 8080
@@ -238,7 +238,7 @@ Page {
 
             Label {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: "Lagoon v0.34.0"
+                text: "Lagoon v0.35.0"
                 font.pixelSize: Theme.fontSizeExtraSmall
                 color: Theme.secondaryColor
                 opacity: 0.6

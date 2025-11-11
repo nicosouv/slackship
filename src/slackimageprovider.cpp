@@ -7,7 +7,6 @@
 
 SlackImageProvider::SlackImageProvider()
     : QQuickImageProvider(QQuickImageProvider::Image)
-    , m_networkManager(new QNetworkAccessManager())
     , m_cache(100)  // Cache up to 100 images
 {
     qDebug() << "SlackImageProvider created";
@@ -15,7 +14,6 @@ SlackImageProvider::SlackImageProvider()
 
 SlackImageProvider::~SlackImageProvider()
 {
-    delete m_networkManager;
 }
 
 void SlackImageProvider::setToken(const QString &token)
@@ -63,8 +61,11 @@ QImage SlackImageProvider::requestImage(const QString &id, QSize *size, const QS
     request.setRawHeader("Authorization", QString("Bearer %1").arg(token).toUtf8());
     request.setHeader(QNetworkRequest::UserAgentHeader, "Lagoon-SailfishOS");
 
+    // Create network manager in current thread to avoid thread warnings
+    QNetworkAccessManager networkManager;
+
     // Synchronous download (required by QQuickImageProvider::requestImage)
-    QNetworkReply *reply = m_networkManager->get(request);
+    QNetworkReply *reply = networkManager.get(request);
 
     // Wait for reply with event loop
     QEventLoop loop;

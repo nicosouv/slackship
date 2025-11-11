@@ -4,6 +4,8 @@ import Sailfish.Silica 1.0
 Page {
     id: workspaceSwitcherPage
 
+    property var _pageStack: pageStack
+
     SilicaListView {
         id: workspaceList
         anchors.fill: parent
@@ -75,7 +77,7 @@ Page {
             onClicked: {
                 console.log("Switching to workspace:", model.name, "index:", model.index)
                 workspaceManager.switchWorkspace(model.index)
-                pageStack.pop()
+                workspaceSwitcherPage._pageStack.pop()
             }
 
             menu: ContextMenu {

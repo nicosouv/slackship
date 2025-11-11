@@ -114,10 +114,16 @@ Page {
                 }
             }
 
-            ViewPlaceholder {
-                enabled: bookmarks.length === 0
-                text: qsTr("No bookmarks")
-                hintText: qsTr("Bookmarks appear in the channel header")
+            Item {
+                width: parent.width
+                height: bookmarks.length === 0 ? Theme.itemSizeHuge : 0
+                visible: bookmarks.length === 0
+
+                ViewPlaceholder {
+                    enabled: bookmarks.length === 0
+                    text: qsTr("No bookmarks")
+                    hintText: qsTr("Bookmarks appear in the channel header")
+                }
             }
 
             // Pins section
@@ -200,10 +206,16 @@ Page {
                 }
             }
 
-            ViewPlaceholder {
-                enabled: pins.length === 0
-                text: qsTr("No pins")
-                hintText: qsTr("Pin important messages to find them quickly")
+            Item {
+                width: parent.width
+                height: pins.length === 0 ? Theme.itemSizeHuge : 0
+                visible: pins.length === 0
+
+                ViewPlaceholder {
+                    enabled: pins.length === 0
+                    text: qsTr("No pins")
+                    hintText: qsTr("Pin important messages to find them quickly")
+                }
             }
         }
 

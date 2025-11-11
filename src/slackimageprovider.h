@@ -23,7 +23,6 @@ public:
 
 private:
     QString m_token;
-    QNetworkAccessManager *m_networkManager;
     QCache<QString, QImage> m_cache;  // Cache images by URL
     QMutex m_tokenMutex;
 };
