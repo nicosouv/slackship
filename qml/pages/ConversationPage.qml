@@ -18,6 +18,51 @@ Page {
 
         // Restore draft for this channel
         loadDraft()
+
+        // Mark conversation as read after a short delay
+        // to allow messages to load first
+        markAsReadTimer.start()
+    }
+
+    // Timer to mark conversation as read (with delay as recommended by Slack)
+    Timer {
+        id: markAsReadTimer
+        interval: 5000  // 5 seconds as recommended by Slack docs
+        repeat: false
+        onTriggered: {
+            markConversationAsRead()
+        }
+    }
+
+    onStatusChanged: {
+        if (status === PageStatus.Active) {
+            // Restart timer when page becomes active
+            markAsReadTimer.restart()
+        }
+    }
+
+    function markConversationAsRead() {
+        // Get the timestamp of the most recent message
+        if (messageListView.count > 0) {
+            // Get the first item (newest message, since verticalLayoutDirection is BottomToTop)
+            var firstItem = messageListView.model.get ? messageListView.model.get(0) : null
+            var latestTimestamp = null
+
+            // Try to get timestamp from the model data
+            if (messageModel.rowCount() > 0) {
+                var modelIndex = messageModel.index(0, 0)
+                latestTimestamp = messageModel.data(modelIndex, 260)  // TimestampRole = Qt::UserRole + 5 = 260
+            }
+
+            if (latestTimestamp && latestTimestamp.length > 0) {
+                console.log("Marking conversation as read up to:", latestTimestamp)
+                slackAPI.markConversationRead(channelId, latestTimestamp)
+                // Also update local unread count
+                conversationModel.updateUnreadCount(channelId, 0)
+            } else {
+                console.log("No messages to mark as read")
+            }
+        }
     }
 
     Component.onDestruction: {

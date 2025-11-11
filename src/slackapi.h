@@ -54,6 +54,7 @@ public slots:
     void joinConversation(const QString &channelId);
     void leaveConversation(const QString &channelId);
     void openDirectMessage(const QString &userId);  // Open or create a DM with a user
+    void markConversationRead(const QString &channelId, const QString &timestamp);  // Mark conversation as read up to timestamp
 
     // Messages
     void sendMessage(const QString &channelId, const QString &text);

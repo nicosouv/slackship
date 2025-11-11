@@ -3,7 +3,7 @@
 
 Name:       harbour-lagoon
 Summary:    Native Slack client for Sailfish OS
-Version:    0.33.5
+Version:    0.33.6
 Release:    1
 Group:      Applications/Internet
 License:    GPLv3

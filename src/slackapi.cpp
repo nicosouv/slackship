@@ -129,6 +129,22 @@ void SlackAPI::leaveConversation(const QString &channelId)
     }
 }
 
+void SlackAPI::markConversationRead(const QString &channelId, const QString &timestamp)
+{
+    if (timestamp.isEmpty()) {
+        qDebug() << "markConversationRead: timestamp is empty, skipping";
+        return;
+    }
+
+    qDebug() << "Marking conversation" << channelId << "as read up to timestamp" << timestamp;
+
+    QJsonObject params;
+    params["channel"] = channelId;
+    params["ts"] = timestamp;
+
+    makeApiRequest("conversations.mark", params);
+}
+
 void SlackAPI::openDirectMessage(const QString &userId)
 {
     QJsonObject params;

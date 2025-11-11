@@ -159,6 +159,10 @@ ListItem {
             text: qsTr("Mark as read")
             visible: channelUnreadCount > 0
             onClicked: {
+                // Use current timestamp to mark everything as read
+                var now = Date.now() / 1000  // Convert to seconds
+                var timestamp = now.toFixed(6)  // Slack timestamp format
+                slackAPI.markConversationRead(channelId, timestamp)
                 conversationModel.updateUnreadCount(channelId, 0)
                 notificationManager.clearChannelNotifications(channelId)
             }
