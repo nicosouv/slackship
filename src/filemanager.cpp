@@ -41,18 +41,19 @@ void FileManager::uploadFile(const QString &channelId,
         return;
     }
 
-    QFile file(filePath);
-    if (!file.exists()) {
+    QFileInfo fileInfo(filePath);
+    if (!fileInfo.exists()) {
         emit uploadError("File does not exist: " + filePath);
         return;
     }
 
-    if (!file.open(QIODevice::ReadOnly)) {
+    QFile *file = new QFile(filePath);
+    if (!file->open(QIODevice::ReadOnly)) {
         emit uploadError("Cannot open file: " + filePath);
+        delete file;
         return;
     }
 
-    QFileInfo fileInfo(filePath);
     m_currentFileName = fileInfo.fileName();
 
     emit uploadStarted(m_currentFileName);
@@ -67,8 +68,8 @@ void FileManager::uploadFile(const QString &channelId,
     filePart.setHeader(QNetworkRequest::ContentDispositionHeader,
                       QVariant(QString("form-data; name=\"file\"; filename=\"%1\"")
                               .arg(m_currentFileName)));
-    filePart.setBodyDevice(&file);
-    file.setParent(multiPart);
+    filePart.setBodyDevice(file);
+    file->setParent(multiPart);
     multiPart->append(filePart);
 
     // Add channels part

@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
 
     // Connect workspace manager to API and stats
     QObject::connect(workspaceManager, &WorkspaceManager::workspaceSwitched,
-                     [slackAPI, statsManager](int /*index*/, const QString &token) {
+                     slackAPI, [slackAPI, statsManager](int /*index*/, const QString &token) {
         slackAPI->authenticate(token);
         // Stats will be updated when teamIdChanged signal is emitted after authentication
     });
@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
 
     // Connect API to notification manager and stats manager
     QObject::connect(slackAPI, &SlackAPI::messageReceived,
-                     [notificationManager, statsManager, conversationModel, userModel](const QJsonObject &message) {
+                     notificationManager, [notificationManager, statsManager, conversationModel, userModel](const QJsonObject &message) {
         QString channelId = message["channel"].toString();
         QString userId = message["user"].toString();
         QString text = message["text"].toString();
@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
 
     // Connect newUnreadMessages signal to notifications (from polling)
     QObject::connect(slackAPI, &SlackAPI::newUnreadMessages,
-                     [notificationManager, conversationModel, userModel](const QString &channelId, int newCount) {
+                     notificationManager, [notificationManager, conversationModel, userModel](const QString &channelId, int newCount) {
         // Update unread count in conversation model (for CoverPage and bold channels)
         conversationModel->updateUnreadCount(channelId, newCount);
 

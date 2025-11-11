@@ -72,20 +72,21 @@ void NotificationManager::showMentionNotification(const QString &channelName,
 
 void NotificationManager::clearNotifications()
 {
-    for (Notification *notification : m_activeNotifications.values()) {
+    QList<Notification*> notifications = m_activeNotifications.values();
+    m_activeNotifications.clear();
+
+    for (Notification *notification : notifications) {
         notification->close();
         notification->deleteLater();
     }
-    m_activeNotifications.clear();
 }
 
 void NotificationManager::clearChannelNotifications(const QString &channelId)
 {
     if (m_activeNotifications.contains(channelId)) {
-        Notification *notification = m_activeNotifications.value(channelId);
+        Notification *notification = m_activeNotifications.take(channelId);
         notification->close();
         notification->deleteLater();
-        m_activeNotifications.remove(channelId);
     }
 }
 
@@ -96,8 +97,10 @@ void NotificationManager::handleNotificationClosed(uint reason)
     Notification *notification = qobject_cast<Notification*>(sender());
     if (notification) {
         QString channelId = notification->property("channelId").toString();
-        m_activeNotifications.remove(channelId);
-        notification->deleteLater();
+        if (m_activeNotifications.contains(channelId) && m_activeNotifications.value(channelId) == notification) {
+            m_activeNotifications.remove(channelId);
+            notification->deleteLater();
+        }
     }
 }
 

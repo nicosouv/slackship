@@ -221,8 +221,10 @@ void SlackAPI::addReaction(const QString &channelId, const QString &ts, const QS
 
     QNetworkReply *reply = makeApiRequest("reactions.add", params);
     // Store channel and timestamp for later refresh
-    reply->setProperty("reactionChannel", channelId);
-    reply->setProperty("reactionTimestamp", ts);
+    if (reply) {
+        reply->setProperty("reactionChannel", channelId);
+        reply->setProperty("reactionTimestamp", ts);
+    }
 }
 
 void SlackAPI::removeReaction(const QString &channelId, const QString &ts, const QString &emoji)
@@ -234,8 +236,10 @@ void SlackAPI::removeReaction(const QString &channelId, const QString &ts, const
 
     QNetworkReply *reply = makeApiRequest("reactions.remove", params);
     // Store channel and timestamp for later refresh
-    reply->setProperty("reactionChannel", channelId);
-    reply->setProperty("reactionTimestamp", ts);
+    if (reply) {
+        reply->setProperty("reactionChannel", channelId);
+        reply->setProperty("reactionTimestamp", ts);
+    }
 }
 
 void SlackAPI::fetchPins(const QString &channelId)
