@@ -1,5 +1,6 @@
 #include "messagemodel.h"
 #include <QDebug>
+#include <QJsonDocument>
 
 MessageModel::MessageModel(QObject *parent)
     : QAbstractListModel(parent)
