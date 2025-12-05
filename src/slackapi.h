@@ -8,6 +8,7 @@
 #include <QJsonArray>
 #include <QTimer>
 #include <QHash>
+#include <QSet>
 #include <QSettings>
 
 #include "websocketclient.h"
@@ -49,6 +50,7 @@ public slots:
     // Conversations
     void fetchConversations();
     void fetchConversationUnreads(const QStringList &channelIds);  // Fetch unread counts for channels
+    Q_INVOKABLE bool isChannelLoading(const QString &channelId) const;  // Check if channel is loading unread info
     void fetchConversationHistory(const QString &channelId, int limit = 50);
     void fetchConversationInfo(const QString &channelId);
     void fetchAllPublicChannels();  // Fetch all public channels (for browsing/joining)
@@ -133,6 +135,7 @@ signals:
     void refreshIntervalChanged();
     void newUnreadMessages(const QString &channelId, int newCount, int totalUnread);
     void conversationUnreadReceived(const QString &channelId, int unreadCount, qint64 lastMessageTime);
+    void channelLoadingChanged(const QString &channelId, bool isLoading);
 
     // Bandwidth signals
     void sessionBandwidthBytesChanged();
@@ -169,6 +172,7 @@ private:
 
     // Unread fetching
     QStringList m_pendingUnreadFetches;  // Channels pending unread fetch
+    QSet<QString> m_loadingChannels;  // Channels currently loading unread info
     QHash<QString, QPair<int, qint64>> m_unreadResults;  // channelId -> (unreadCount, lastMessageTime)
 
     // Bandwidth tracking

@@ -87,9 +87,11 @@ void SlackAPI::fetchConversationUnreads(const QStringList &channelIds)
     // Fetch conversations.info for each channel to get unread counts
     // We'll process these in batches to avoid rate limiting
     m_pendingUnreadFetches = channelIds;
+    m_loadingChannels.clear();
     m_unreadResults.clear();
 
     if (!m_pendingUnreadFetches.isEmpty()) {
+        qDebug() << "[SlackAPI] Starting unread fetch for" << channelIds.count() << "channels";
         // Start fetching - process first batch
         processNextUnreadBatch();
     }
@@ -97,12 +99,16 @@ void SlackAPI::fetchConversationUnreads(const QStringList &channelIds)
 
 void SlackAPI::processNextUnreadBatch()
 {
-    // Process up to 5 channels at a time
-    const int batchSize = 5;
+    // Process up to 3 channels at a time with delay between batches
+    const int batchSize = 3;
     int processed = 0;
 
     while (!m_pendingUnreadFetches.isEmpty() && processed < batchSize) {
         QString channelId = m_pendingUnreadFetches.takeFirst();
+
+        // Mark channel as loading
+        m_loadingChannels.insert(channelId);
+        emit channelLoadingChanged(channelId, true);
 
         QJsonObject params;
         params["channel"] = channelId;
@@ -114,6 +120,11 @@ void SlackAPI::processNextUnreadBatch()
         }
         processed++;
     }
+}
+
+bool SlackAPI::isChannelLoading(const QString &channelId) const
+{
+    return m_loadingChannels.contains(channelId);
 }
 
 void SlackAPI::fetchAllPublicChannels()
@@ -562,15 +573,17 @@ void SlackAPI::processApiResponse(const QString &endpoint, const QJsonObject &re
                 }
             }
 
-            qDebug() << "[SlackAPI] Unread info for" << channelId << ":" << unreadCount << "unread, lastMsg:" << lastMessageTime;
+            // Mark channel as done loading
+            m_loadingChannels.remove(channelId);
+            emit channelLoadingChanged(channelId, false);
 
             // Emit signal for this conversation
             emit conversationUnreadReceived(channelId, unreadCount, lastMessageTime);
 
             // Continue processing next batch if there are more
             if (!m_pendingUnreadFetches.isEmpty()) {
-                // Small delay to avoid rate limiting
-                QTimer::singleShot(100, this, &SlackAPI::processNextUnreadBatch);
+                // 500ms delay between batches to avoid rate limiting
+                QTimer::singleShot(500, this, &SlackAPI::processNextUnreadBatch);
             }
         } else {
             emit conversationInfoReceived(channel);

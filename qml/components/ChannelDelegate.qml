@@ -19,6 +19,17 @@ ListItem {
     property string channelLastMessage: channelData.lastMessage || ""
     property var channelLastMessageTime: channelData.lastMessageTime || 0
     property bool channelIsMember: channelData.isMember !== undefined ? channelData.isMember : true
+    property bool isLoadingUnread: false
+
+    // Listen for loading state changes
+    Connections {
+        target: slackAPI
+        onChannelLoadingChanged: {
+            if (channelId === channelItem.channelId) {
+                channelItem.isLoadingUnread = isLoading
+            }
+        }
+    }
 
     // Format timestamp for display
     function formatMessageTime(timestamp) {
@@ -128,13 +139,25 @@ ListItem {
                 }
             }
 
-            Label {
+            Row {
                 width: parent.width
-                text: formatMessageTime(channelLastMessageTime)
-                truncationMode: TruncationMode.Fade
-                font.pixelSize: Theme.fontSizeExtraSmall
-                color: Theme.secondaryColor
-                visible: text.length > 0
+                spacing: Theme.paddingSmall
+
+                // Mini spinner when loading unread info
+                BusyIndicator {
+                    size: BusyIndicatorSize.ExtraSmall
+                    running: isLoadingUnread
+                    visible: running
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                Label {
+                    text: formatMessageTime(channelLastMessageTime)
+                    truncationMode: TruncationMode.Fade
+                    font.pixelSize: Theme.fontSizeExtraSmall
+                    color: Theme.secondaryColor
+                    visible: text.length > 0 && !isLoadingUnread
+                }
             }
         }
 
