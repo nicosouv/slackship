@@ -232,9 +232,9 @@ Page {
                     // Collapse/expand icon (only for collapsible sections)
                     Icon {
                         id: collapseIcon
-                        source: sectionHeader.isCollapsed ? "image://theme/icon-splus-right" : "image://theme/icon-splus-down"
-                        width: Theme.iconSizeSmall
-                        height: Theme.iconSizeSmall
+                        source: sectionHeader.isCollapsed ? "image://theme/icon-m-right" : "image://theme/icon-m-down"
+                        width: Theme.iconSizeExtraSmall
+                        height: Theme.iconSizeExtraSmall
                         color: Theme.highlightColor
                         visible: sectionHeader.isCollapsible
                         anchors.verticalCenter: parent.verticalCenter
