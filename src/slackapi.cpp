@@ -488,21 +488,53 @@ void SlackAPI::processApiResponse(const QString &endpoint, const QJsonObject &re
     } else if (endpoint == "users.conversations") {
         QJsonArray conversations = response["channels"].toArray();
 
-        // Use unread_count from conversation data instead of making separate requests
-        // This drastically reduces API calls and avoids rate limiting
+        // Check for unread messages in each conversation
         for (const QJsonValue &value : conversations) {
             if (value.isObject()) {
                 QJsonObject conv = value.toObject();
                 QString channelId = conv["id"].toString();
-                int unreadCount = conv["unread_count"].toInt(0);
+                QString channelName = conv["name"].toString();
+
+                // Calculate unread count using multiple methods:
+                int unreadCount = 0;
+
+                // Method 1: unread_count (works for DMs)
+                if (conv.contains("unread_count")) {
+                    unreadCount = conv["unread_count"].toInt(0);
+                }
+                // Method 2: unread_count_display (more accurate for DMs)
+                if (conv.contains("unread_count_display")) {
+                    unreadCount = conv["unread_count_display"].toInt(0);
+                }
+                // Method 3: Compare last_read vs latest timestamp (for channels)
+                if (unreadCount == 0 && conv.contains("last_read")) {
+                    QString lastRead = conv["last_read"].toString();
+                    QJsonObject latest = conv["latest"].toObject();
+                    QString latestTs = latest["ts"].toString();
+
+                    if (!latestTs.isEmpty() && !lastRead.isEmpty()) {
+                        double lastReadDouble = lastRead.toDouble();
+                        double latestDouble = latestTs.toDouble();
+                        if (latestDouble > lastReadDouble) {
+                            // There are unread messages
+                            unreadCount = 1;
+                        }
+                    }
+                }
+
                 int lastKnownCount = m_lastUnreadCounts.value(channelId, 0);
 
-                // Always update the tracked count
+                // Update if count changed
                 if (unreadCount != lastKnownCount) {
+                    qDebug() << "Unread change for" << channelName << ":" << lastKnownCount << "->" << unreadCount;
+
                     // Emit notification only if count increased
                     if (unreadCount > lastKnownCount) {
                         int newMessages = unreadCount - lastKnownCount;
                         emit newUnreadMessages(channelId, newMessages, unreadCount);
+                    } else if (unreadCount == 0 && lastKnownCount > 0) {
+                        // Count went to zero - need to update model to remove from Unread section
+                        emit newUnreadMessages(channelId, 0, 0);
                     }
                     m_lastUnreadCounts[channelId] = unreadCount;
                 }

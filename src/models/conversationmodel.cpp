@@ -132,9 +132,20 @@ void ConversationModel::updateUnreadCount(const QString &conversationId, int cou
 {
     int index = findConversationIndex(conversationId);
     if (index >= 0) {
+        int oldCount = m_conversations[index].unreadCount;
         m_conversations[index].unreadCount = count;
         QModelIndex modelIndex = createIndex(index, 0);
-        emit dataChanged(modelIndex, modelIndex, {UnreadCountRole});
+        // Include SectionRole because section depends on unreadCount
+        emit dataChanged(modelIndex, modelIndex, {UnreadCountRole, SectionRole});
+
+        // If unread status changed, re-sort to move item to/from Unread section
+        bool wasUnread = oldCount > 0;
+        bool isUnread = count > 0;
+        if (wasUnread != isUnread) {
+            beginResetModel();
+            sortConversations();
+            endResetModel();
+        }
     }
 }
 
