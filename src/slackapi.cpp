@@ -373,6 +373,7 @@ void SlackAPI::connectWebSocket()
         return;
     }
 
+    qDebug() << "[SlackAPI] Connecting WebSocket via rtm.connect...";
     // Use rtm.connect for user tokens (xoxp-) instead of apps.connections.open (which requires bot tokens)
     makeApiRequest("rtm.connect");
 }
@@ -427,8 +428,12 @@ void SlackAPI::handleNetworkReply(QNetworkReply *reply)
 void SlackAPI::handleWebSocketMessage(const QJsonObject &message)
 {
     QString type = message["type"].toString();
+    qDebug() << "[SlackAPI] WebSocket message received, type:" << type;
 
     if (type == "message") {
+        QString channel = message["channel"].toString();
+        QString user = message["user"].toString();
+        qDebug() << "[SlackAPI] New message in channel:" << channel << "from user:" << user;
         emit messageReceived(message);
     } else if (type == "message_changed") {
         emit messageUpdated(message);
@@ -688,13 +693,14 @@ void SlackAPI::processApiResponse(const QString &endpoint, const QJsonObject &re
         }
 
     } else if (endpoint == "rtm.connect") {
-        qDebug() << "RTM connect response received";
+        qDebug() << "[SlackAPI] RTM connect response received";
         QString wsUrl = response["url"].toString();
         if (!wsUrl.isEmpty()) {
-            qDebug() << "Connecting to RTM WebSocket URL:" << wsUrl;
+            qDebug() << "[SlackAPI] Connecting to RTM WebSocket...";
             m_webSocketClient->connectToUrl(wsUrl);
         } else {
-            qDebug() << "No WebSocket URL in rtm.connect response";
+            qWarning() << "[SlackAPI] No WebSocket URL in rtm.connect response - real-time features disabled";
+            qWarning() << "[SlackAPI] This may be due to missing rtm:stream scope";
         }
     }
 }
