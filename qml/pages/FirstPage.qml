@@ -51,11 +51,15 @@ Page {
         // Load conversations automatically
         loadWorkspaceData()
 
-        // Attach StatsPage to the right
-        pageStack.pushAttached(Qt.resolvedUrl("StatsPage.qml"))
-
         // Update visible count initially
         updateVisibleCount()
+    }
+
+    // Attach StatsPage after page transition completes
+    onStatusChanged: {
+        if (status === PageStatus.Active && !pageStack.nextPage(firstPage)) {
+            pageStack.pushAttached(Qt.resolvedUrl("StatsPage.qml"))
+        }
     }
 
     // Listen for workspace switches

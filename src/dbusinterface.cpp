@@ -31,14 +31,13 @@ DBusInterface::DBusInterface(QObject *parent)
 
     qDebug() << "Registered D-Bus object at path:" << DBUS_PATH_NAME;
 
-    // Register the service
+    // Register the service (may fail on sandboxed apps - this is expected)
     if (!sessionBus.registerService(DBUS_INTERFACE_NAME)) {
-        qWarning() << "ERROR: Cannot register service to D-Bus:"
-                   << sessionBus.lastError().message();
-        return;
+        qDebug() << "D-Bus service registration skipped (sandboxed app)";
+    } else {
+        qDebug() << "Registered D-Bus service:" << DBUS_INTERFACE_NAME;
     }
 
-    qDebug() << "Registered D-Bus service:" << DBUS_INTERFACE_NAME;
     qDebug() << "=== DBUS INTERFACE READY ===";
 }
 
