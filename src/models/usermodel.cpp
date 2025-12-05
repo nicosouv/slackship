@@ -2,6 +2,7 @@
 
 UserModel::UserModel(QObject *parent)
     : QAbstractListModel(parent)
+    , m_userCache("harbour-lagoon", "users")
 {
 }
 
@@ -71,6 +72,13 @@ QString UserModel::getUserName(const QString &userId) const
             return user.name;
         }
     }
+
+    // Fallback to cached name if user not in memory
+    QString cachedName = getUserNameFromCache(userId);
+    if (!cachedName.isEmpty()) {
+        return cachedName;
+    }
+
     return userId;
 }
 
@@ -113,10 +121,12 @@ void UserModel::updateUsers(const QJsonArray &users)
         if (value.isObject()) {
             User user = parseUser(value.toObject());
             m_users.append(user);
+            saveUserToCache(user);
         }
     }
 
     endResetModel();
+    emit usersUpdated();
 }
 
 void UserModel::addUser(const QJsonObject &user)
@@ -201,4 +211,26 @@ void UserModel::clear()
     beginRemoveRows(QModelIndex(), 0, m_users.count() - 1);
     m_users.clear();
     endRemoveRows();
+}
+
+void UserModel::saveUserToCache(const User &user)
+{
+    // Determine the best name to cache
+    QString name;
+    if (!user.displayName.isEmpty()) {
+        name = user.displayName;
+    } else if (!user.realName.isEmpty()) {
+        name = user.realName;
+    } else {
+        name = user.name;
+    }
+
+    if (!name.isEmpty()) {
+        m_userCache.setValue(user.id, name);
+    }
+}
+
+QString UserModel::getUserNameFromCache(const QString &userId) const
+{
+    return m_userCache.value(userId).toString();
 }

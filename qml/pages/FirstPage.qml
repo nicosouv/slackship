@@ -103,6 +103,16 @@ Page {
         }
     }
 
+    // Refresh list when users are loaded (to update DM names)
+    Connections {
+        target: userModel
+        onUsersUpdated: {
+            // Force the list to refresh so DM names are resolved
+            conversationListView.model = null
+            conversationListView.model = conversationModel
+        }
+    }
+
     function checkLoadingComplete() {
         // Only stop loading when both users and conversations are loaded
         if (usersLoaded && conversationsLoaded) {

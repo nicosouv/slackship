@@ -4,6 +4,7 @@
 #include <QAbstractListModel>
 #include <QJsonArray>
 #include <QJsonObject>
+#include <QSettings>
 
 class UserModel : public QAbstractListModel
 {
@@ -33,6 +34,9 @@ public:
     Q_INVOKABLE int userCount(bool excludeBots = true) const;
     Q_INVOKABLE QVariantMap getUserDetails(const QString &userId) const;
 
+signals:
+    void usersUpdated();  // Emitted when users are loaded/updated
+
 public slots:
     void updateUsers(const QJsonArray &users);
     void addUser(const QJsonObject &user);
@@ -54,8 +58,11 @@ private:
     };
 
     QList<User> m_users;
+    QSettings m_userCache;  // Persistent cache for user names
     int findUserIndex(const QString &userId) const;
     User parseUser(const QJsonObject &json) const;
+    void saveUserToCache(const User &user);
+    QString getUserNameFromCache(const QString &userId) const;
 };
 
 #endif // USERMODEL_H
