@@ -193,9 +193,24 @@ Page {
 
             // User profile section
             BackgroundItem {
+                id: profileSection
                 width: parent.width
                 height: profileRow.height + Theme.paddingMedium * 2
                 visible: slackAPI.isAuthenticated
+
+                // Re-evaluate avatar when users are loaded
+                property string currentUserAvatar: ""
+
+                Connections {
+                    target: userModel
+                    onUsersUpdated: {
+                        profileSection.currentUserAvatar = userModel.getUserAvatar(slackAPI.currentUserId) || ""
+                    }
+                }
+
+                Component.onCompleted: {
+                    currentUserAvatar = userModel.getUserAvatar(slackAPI.currentUserId) || ""
+                }
 
                 onClicked: {
                     var userDetails = userModel.getUserDetails(slackAPI.currentUserId)
@@ -223,9 +238,9 @@ Page {
                         width: Theme.iconSizeMedium
                         height: Theme.iconSizeMedium
                         anchors.verticalCenter: parent.verticalCenter
-                        source: userModel.getUserAvatar(slackAPI.currentUserId) || ""
+                        source: profileSection.currentUserAvatar
                         fillMode: Image.PreserveAspectCrop
-                        visible: source !== ""
+                        visible: status === Image.Ready
 
                         layer.enabled: true
                         layer.effect: ShaderEffect {
@@ -262,7 +277,7 @@ Page {
                         anchors.verticalCenter: parent.verticalCenter
                         radius: width / 2
                         color: Theme.rgba(Theme.highlightBackgroundColor, 0.3)
-                        visible: userAvatar.source === "" || userAvatar.status === Image.Error
+                        visible: userAvatar.status !== Image.Ready
 
                         Label {
                             anchors.centerIn: parent
