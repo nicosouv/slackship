@@ -98,25 +98,31 @@ ListItem {
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
-                // Icon based on type - using Icon for private channels
-                Icon {
-                    source: "image://theme/icon-s-secure"
-                    width: Theme.iconSizeExtraSmall
-                    height: Theme.iconSizeExtraSmall
-                    color: channelItem.highlighted ? Theme.highlightColor : Theme.secondaryColor
-                    visible: (channelType === "channel" || channelType === "group") && channelIsPrivate
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-
-                // Text indicator for type
-                Label {
-                    text: channelType === "im" ? "DM" :
-                          channelType === "mpim" ? "GM" : "#"
-                    font.pixelSize: Theme.fontSizeSmall
-                    color: channelItem.highlighted ? Theme.highlightColor : Theme.secondaryColor
+                // Fixed-width container for channel type indicator (# or lock icon)
+                Item {
                     width: Theme.fontSizeSmall * 1.5
-                    visible: !(channelType === "channel" || channelType === "group") || !channelIsPrivate
+                    height: parent.height
                     anchors.verticalCenter: parent.verticalCenter
+
+                    // Lock icon for private channels
+                    Icon {
+                        source: "image://theme/icon-s-secure"
+                        width: Theme.iconSizeExtraSmall
+                        height: Theme.iconSizeExtraSmall
+                        color: channelItem.highlighted ? Theme.highlightColor : Theme.secondaryColor
+                        visible: (channelType === "channel" || channelType === "group") && channelIsPrivate
+                        anchors.centerIn: parent
+                    }
+
+                    // Text indicator for type (# for public channels, DM, GM)
+                    Label {
+                        text: channelType === "im" ? "DM" :
+                              channelType === "mpim" ? "GM" : "#"
+                        font.pixelSize: Theme.fontSizeSmall
+                        color: channelItem.highlighted ? Theme.highlightColor : Theme.secondaryColor
+                        visible: !(channelType === "channel" || channelType === "group") || !channelIsPrivate
+                        anchors.centerIn: parent
+                    }
                 }
 
                 Label {
