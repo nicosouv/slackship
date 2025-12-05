@@ -4,6 +4,9 @@ import Sailfish.Silica 1.0
 Page {
     id: workspaceSwitcherPage
 
+    // Store reference to pageStack to avoid context issues in delegates
+    property var navStack: pageStack
+
     Connections {
         target: workspaceManager
         onAllWorkspacesRemoved: {
@@ -82,8 +85,9 @@ Page {
 
             onClicked: {
                 console.log("Switching to workspace:", model.name, "index:", model.index)
+                // Pop first before workspace switch to avoid context issues
+                workspaceSwitcherPage.navStack.pop()
                 workspaceManager.switchWorkspace(model.index)
-                pageStack.pop()
             }
 
             menu: ContextMenu {

@@ -34,8 +34,10 @@ ListItem {
     // Format timestamp for display
     function formatMessageTime(timestamp) {
         if (!timestamp || timestamp === 0) {
+            console.log("[ChannelDelegate] No timestamp for:", channelName, "value:", timestamp)
             return ""
         }
+        console.log("[ChannelDelegate] Formatting timestamp for:", channelName, "value:", timestamp)
 
         var now = new Date()
         var messageDate = new Date(timestamp)
@@ -176,24 +178,16 @@ ListItem {
         console.log("Channel clicked:", channelName, channelId)
 
         // Mark as read
-        if (typeof conversationModel !== "undefined") {
-            conversationModel.updateUnreadCount(channelId, 0)
-        }
-        if (typeof notificationManager !== "undefined") {
-            notificationManager.clearChannelNotifications(channelId)
-        }
+        conversationModel.updateUnreadCount(channelId, 0)
+        notificationManager.clearChannelNotifications(channelId)
 
         // Set current channel and fetch messages
-        if (typeof messageModel !== "undefined") {
-            messageModel.currentChannelId = channelId
-        }
-        if (typeof slackAPI !== "undefined") {
-            slackAPI.fetchConversationHistory(channelId)
-        }
+        messageModel.currentChannelId = channelId
+        slackAPI.fetchConversationHistory(channelId)
 
         // Navigate to conversation
         var displayName = channelName
-        if (channelType === "im" && channelUserId && typeof userModel !== "undefined") {
+        if (channelType === "im" && channelUserId) {
             displayName = userModel.getUserName(channelUserId)
         }
         pageStack.push(Qt.resolvedUrl("../pages/ConversationPage.qml"), {
@@ -206,9 +200,7 @@ ListItem {
         MenuItem {
             text: channelIsStarred ? qsTr("Unstar") : qsTr("Star")
             onClicked: {
-                if (typeof conversationModel !== "undefined") {
-                    conversationModel.toggleStar(channelId)
-                }
+                conversationModel.toggleStar(channelId)
             }
         }
         MenuItem {
@@ -218,15 +210,9 @@ ListItem {
                 // Use current timestamp to mark everything as read
                 var now = Date.now() / 1000  // Convert to seconds
                 var timestamp = now.toFixed(6)  // Slack timestamp format
-                if (typeof slackAPI !== "undefined") {
-                    slackAPI.markConversationRead(channelId, timestamp)
-                }
-                if (typeof conversationModel !== "undefined") {
-                    conversationModel.updateUnreadCount(channelId, 0)
-                }
-                if (typeof notificationManager !== "undefined") {
-                    notificationManager.clearChannelNotifications(channelId)
-                }
+                slackAPI.markConversationRead(channelId, timestamp)
+                conversationModel.updateUnreadCount(channelId, 0)
+                notificationManager.clearChannelNotifications(channelId)
             }
         }
         MenuItem {
@@ -234,9 +220,7 @@ ListItem {
             visible: channelIsMember
             onClicked: {
                 remorseAction(qsTr("Leaving channel"), function() {
-                    if (typeof slackAPI !== "undefined") {
-                        slackAPI.leaveConversation(channelId)
-                    }
+                    slackAPI.leaveConversation(channelId)
                 })
             }
         }
