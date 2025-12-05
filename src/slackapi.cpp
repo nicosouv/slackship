@@ -411,16 +411,16 @@ void SlackAPI::handleNetworkReply(QNetworkReply *reply)
 
     QJsonObject response = doc.object();
 
-    if (!response["ok"].toBool()) {
-        QString error = response["error"].toString();
-        qWarning() << "API error:" << error;
-        emit apiError(error);
-        return;
-    }
-
     // Extract endpoint from reply URL
     QString endpoint = reply->url().path();
     endpoint.remove("/api/");
+
+    if (!response["ok"].toBool()) {
+        QString error = response["error"].toString();
+        qWarning() << "[SlackAPI] API error for" << endpoint << ":" << error;
+        emit apiError(error);
+        return;
+    }
 
     processApiResponse(endpoint, response, reply);
 }

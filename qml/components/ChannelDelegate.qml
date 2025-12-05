@@ -5,16 +5,6 @@ ListItem {
     id: channelItem
     contentHeight: Theme.itemSizeMedium
 
-    // Safe function to clear notifications (notificationManager may not be available in all contexts)
-    function clearNotifications(channelId) {
-        try {
-            if (notificationManager) {
-                notificationManager.clearChannelNotifications(channelId)
-            }
-        } catch (e) {
-            console.log("[ChannelDelegate] Could not clear notifications:", e)
-        }
-    }
 
     // Support both model-based (ListView) and property-based (Repeater) usage
     // When used with modelData, these properties should be bound explicitly
@@ -186,9 +176,8 @@ ListItem {
     onClicked: {
         console.log("Channel clicked:", channelName, channelId)
 
-        // Mark as read
+        // Mark as read locally
         conversationModel.updateUnreadCount(channelId, 0)
-        clearNotifications(channelId)
 
         // Set current channel and fetch messages
         messageModel.currentChannelId = channelId
@@ -221,7 +210,6 @@ ListItem {
                 var timestamp = now.toFixed(6)  // Slack timestamp format
                 slackAPI.markConversationRead(channelId, timestamp)
                 conversationModel.updateUnreadCount(channelId, 0)
-                clearNotifications(channelId)
             }
         }
         MenuItem {
