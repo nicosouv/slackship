@@ -199,6 +199,16 @@ Page {
                 // Only collapsible sections are clickable
                 enabled: section === "channel" || section === "im" || section === "mpim"
 
+                // Determine if this section is collapsed
+                // Use direct property bindings to ensure updates
+                property bool isCollapsed: {
+                    if (section === "channel") return channelsCollapsed
+                    if (section === "im") return dmCollapsed
+                    if (section === "mpim") return groupMessagesCollapsed
+                    return false
+                }
+                property bool isCollapsible: section === "channel" || section === "im" || section === "mpim"
+
                 Row {
                     anchors.left: parent.left
                     anchors.leftMargin: Theme.horizontalPageMargin
@@ -208,11 +218,11 @@ Page {
                     // Collapse/expand icon (only for collapsible sections)
                     Icon {
                         id: collapseIcon
-                        source: isSectionCollapsed(section) ? "image://theme/icon-s-right" : "image://theme/icon-s-down"
+                        source: sectionHeader.isCollapsed ? "image://theme/icon-s-right" : "image://theme/icon-s-down"
                         width: Theme.iconSizeSmall
                         height: Theme.iconSizeSmall
                         color: Theme.highlightColor
-                        visible: section === "channel" || section === "im" || section === "mpim"
+                        visible: sectionHeader.isCollapsible
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
