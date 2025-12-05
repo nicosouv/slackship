@@ -138,6 +138,13 @@ void SlackAPI::markConversationRead(const QString &channelId, const QString &tim
     makeApiRequest("conversations.mark", params);
 }
 
+void SlackAPI::fetchUnreadCounts()
+{
+    // Use the undocumented client.counts endpoint used by the official Slack web client
+    // This returns unread counts for all channels and DMs in a single request
+    makeApiRequest("client.counts");
+}
+
 void SlackAPI::openDirectMessage(const QString &userId)
 {
     QJsonObject params;
@@ -510,6 +517,96 @@ void SlackAPI::processApiResponse(const QString &endpoint, const QJsonObject &re
         }
 
         emit conversationsReceived(conversations);
+
+    } else if (endpoint == "client.counts") {
+        // Process unread counts from the undocumented client.counts endpoint
+        // Response structure: { channels: [...], ims: [...], mpims: [...] }
+        // Each entry has: { id, has_unreads, mention_count, last_read, latest }
+        QJsonObject counts;
+
+        // Process channels
+        QJsonArray channels = response["channels"].toArray();
+        for (const QJsonValue &value : channels) {
+            QJsonObject ch = value.toObject();
+            QString channelId = ch["id"].toString();
+            bool hasUnreads = ch["has_unreads"].toBool();
+            int mentionCount = ch["mention_count"].toInt(0);
+
+            // Calculate unread count: use mention_count if available, otherwise 1 if has_unreads
+            int unreadCount = hasUnreads ? qMax(1, mentionCount) : 0;
+
+            QJsonObject countObj;
+            countObj["unread_count"] = unreadCount;
+            countObj["has_unreads"] = hasUnreads;
+            countObj["mention_count"] = mentionCount;
+            counts[channelId] = countObj;
+
+            // Update tracking and emit notifications
+            int lastKnownCount = m_lastUnreadCounts.value(channelId, 0);
+            if (unreadCount != lastKnownCount) {
+                if (unreadCount > lastKnownCount) {
+                    int newMessages = unreadCount - lastKnownCount;
+                    emit newUnreadMessages(channelId, newMessages, unreadCount);
+                }
+                m_lastUnreadCounts[channelId] = unreadCount;
+            }
+        }
+
+        // Process IMs (direct messages)
+        QJsonArray ims = response["ims"].toArray();
+        for (const QJsonValue &value : ims) {
+            QJsonObject im = value.toObject();
+            QString channelId = im["id"].toString();
+            bool hasUnreads = im["has_unreads"].toBool();
+            int mentionCount = im["mention_count"].toInt(0);
+            int dmUnreadCount = im["dm_count"].toInt(0);
+
+            int unreadCount = dmUnreadCount > 0 ? dmUnreadCount : (hasUnreads ? 1 : 0);
+
+            QJsonObject countObj;
+            countObj["unread_count"] = unreadCount;
+            countObj["has_unreads"] = hasUnreads;
+            countObj["mention_count"] = mentionCount;
+            counts[channelId] = countObj;
+
+            int lastKnownCount = m_lastUnreadCounts.value(channelId, 0);
+            if (unreadCount != lastKnownCount) {
+                if (unreadCount > lastKnownCount) {
+                    int newMessages = unreadCount - lastKnownCount;
+                    emit newUnreadMessages(channelId, newMessages, unreadCount);
+                }
+                m_lastUnreadCounts[channelId] = unreadCount;
+            }
+        }
+
+        // Process MPIMs (multi-party IMs / group DMs)
+        QJsonArray mpims = response["mpims"].toArray();
+        for (const QJsonValue &value : mpims) {
+            QJsonObject mpim = value.toObject();
+            QString channelId = mpim["id"].toString();
+            bool hasUnreads = mpim["has_unreads"].toBool();
+            int mentionCount = mpim["mention_count"].toInt(0);
+            int dmUnreadCount = mpim["dm_count"].toInt(0);
+
+            int unreadCount = dmUnreadCount > 0 ? dmUnreadCount : (hasUnreads ? 1 : 0);
+
+            QJsonObject countObj;
+            countObj["unread_count"] = unreadCount;
+            countObj["has_unreads"] = hasUnreads;
+            countObj["mention_count"] = mentionCount;
+            counts[channelId] = countObj;
+
+            int lastKnownCount = m_lastUnreadCounts.value(channelId, 0);
+            if (unreadCount != lastKnownCount) {
+                if (unreadCount > lastKnownCount) {
+                    int newMessages = unreadCount - lastKnownCount;
+                    emit newUnreadMessages(channelId, newMessages, unreadCount);
+                }
+                m_lastUnreadCounts[channelId] = unreadCount;
+            }
+        }
+
+        emit unreadCountsReceived(counts);
 
     } else if (endpoint == "conversations.list") {
         // This is for browsing ALL public channels (not just joined ones)

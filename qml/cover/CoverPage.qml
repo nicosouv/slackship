@@ -31,8 +31,9 @@ CoverBackground {
             lastMessageText = text
             for (var i = 0; i < conversationModel.rowCount(); i++) {
                 var idx = conversationModel.index(i, 0)
-                if (conversationModel.data(idx, 256) === channelId) { // IdRole = 256
-                    lastMessageChannel = conversationModel.data(idx, 257) // NameRole = 257
+                // IdRole = Qt::UserRole + 1 = 257, NameRole = 258
+                if (conversationModel.data(idx, 257) === channelId) {
+                    lastMessageChannel = conversationModel.data(idx, 258)
                     break
                 }
             }
@@ -50,7 +51,8 @@ CoverBackground {
         var total = 0
         for (var i = 0; i < conversationModel.rowCount(); i++) {
             var idx = conversationModel.index(i, 0)
-            var count = conversationModel.data(idx, 261) // UnreadCountRole = 261
+            // UnreadCountRole = Qt::UserRole + 6 = 256 + 6 = 262
+            var count = conversationModel.data(idx, 262)
             total += count || 0
         }
         unreadCount = total

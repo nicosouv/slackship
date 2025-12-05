@@ -83,6 +83,9 @@ public slots:
     void fetchUserInfo(const QString &userId);
     void fetchUserProfile(const QString &userId);  // Enhanced profile with status
 
+    // Unread counts (uses undocumented client.counts endpoint)
+    void fetchUnreadCounts();
+
     // Search
     void searchMessages(const QString &query);
 
@@ -131,6 +134,7 @@ signals:
     void autoRefreshChanged();
     void refreshIntervalChanged();
     void newUnreadMessages(const QString &channelId, int newCount, int totalUnread);
+    void unreadCountsReceived(const QJsonObject &counts);
 
     // Bandwidth signals
     void sessionBandwidthBytesChanged();

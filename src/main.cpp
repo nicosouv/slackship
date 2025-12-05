@@ -125,6 +125,23 @@ int main(int argc, char *argv[])
     QObject::connect(slackAPI, &SlackAPI::messagesReceived,
                      messageModel, &MessageModel::updateMessages);
 
+    // Fetch unread counts after conversations are loaded (uses client.counts endpoint)
+    QObject::connect(slackAPI, &SlackAPI::conversationsReceived,
+                     slackAPI, [slackAPI]() {
+        slackAPI->fetchUnreadCounts();
+    });
+
+    // Update conversation model with unread counts from client.counts
+    QObject::connect(slackAPI, &SlackAPI::unreadCountsReceived,
+                     conversationModel, [conversationModel](const QJsonObject &counts) {
+        for (auto it = counts.begin(); it != counts.end(); ++it) {
+            QString channelId = it.key();
+            QJsonObject countObj = it.value().toObject();
+            int unreadCount = countObj["unread_count"].toInt(0);
+            conversationModel->updateUnreadCount(channelId, unreadCount);
+        }
+    });
+
     // Also track historical messages for stats
     QObject::connect(slackAPI, &SlackAPI::messagesReceived,
                      statsManager, [statsManager](const QJsonArray &messages) {
