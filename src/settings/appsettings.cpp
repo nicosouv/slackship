@@ -93,8 +93,8 @@ void AppSettings::setPollingInterval(int seconds)
 
 bool AppSettings::channelsSectionExpanded() const
 {
-    // Default to expanded (true)
-    return m_settings.value("ui/channelsSectionExpanded", true).toBool();
+    // Default to collapsed (false)
+    return m_settings.value("ui/channelsSectionExpanded", false).toBool();
 }
 
 void AppSettings::setChannelsSectionExpanded(bool expanded)
@@ -107,8 +107,8 @@ void AppSettings::setChannelsSectionExpanded(bool expanded)
 
 bool AppSettings::dmsSectionExpanded() const
 {
-    // Default to expanded (true)
-    return m_settings.value("ui/dmsSectionExpanded", true).toBool();
+    // Default to collapsed (false)
+    return m_settings.value("ui/dmsSectionExpanded", false).toBool();
 }
 
 void AppSettings::setDmsSectionExpanded(bool expanded)

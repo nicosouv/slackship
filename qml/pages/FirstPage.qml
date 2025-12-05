@@ -240,9 +240,12 @@ Page {
         }
 
         delegate: ChannelDelegate {
-            // Hide if section is collapsed or doesn't match search
-            visible: matchesSearch(name) && !isSectionCollapsed(model.section)
-            height: visible ? implicitHeight : 0
+            // Hide if doesn't match search (use visible)
+            // Hide if section is collapsed (use height: 0 to keep section header visible)
+            visible: matchesSearch(name)
+            height: visible && !isSectionCollapsed(model.section) ? implicitHeight : 0
+            clip: true
+            opacity: height > 0 ? 1 : 0
 
             onClicked: {
                 console.log("Conversation clicked:", name, id)

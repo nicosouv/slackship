@@ -159,31 +159,18 @@ ConversationModel::Conversation ConversationModel::parseConversation(const QJson
     conv.isPrivate = json["is_private"].toBool();
     conv.isMember = json["is_member"].toBool();
 
-    // Calculate unread count using same strategy as SailSlack:
-    // - For DMs/MPIMs: use unread_count_display if available
-    // - For channels: compare last_read with latest message timestamp
+    // Calculate unread count:
+    // - unread_count is available for DMs/MPIMs from users.conversations
+    // - For channels: Slack API doesn't provide unread_count, we track it locally
     conv.unreadCount = 0;
 
-    if (json.contains("unread_count_display")) {
-        // DMs and group messages provide this
-        conv.unreadCount = json["unread_count_display"].toInt();
-    } else if (json.contains("last_read")) {
-        // For channels, check if there are unread messages
-        QString lastRead = json["last_read"].toString();
-        QJsonObject latest = json["latest"].toObject();
-        QString latestTs = latest["ts"].toString();
-
-        // If latest message timestamp > last_read, there are unread messages
-        if (!latestTs.isEmpty() && !lastRead.isEmpty()) {
-            double lastReadDouble = lastRead.toDouble();
-            double latestDouble = latestTs.toDouble();
-            if (latestDouble > lastReadDouble) {
-                conv.unreadCount = 1;  // We don't know exact count, but we know there are unreads
-            }
-        }
-    } else {
-        // Fallback to unread_count if present (though it's usually not for channels)
+    // Try unread_count first (works for DMs)
+    if (json.contains("unread_count")) {
         conv.unreadCount = json["unread_count"].toInt();
+    }
+    // Override with unread_count_display if available (more accurate for DMs)
+    if (json.contains("unread_count_display")) {
+        conv.unreadCount = json["unread_count_display"].toInt();
     }
 
     // Extract last message timestamp from latest object
