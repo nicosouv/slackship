@@ -7,13 +7,23 @@ Page {
 
     property string channelId
     property string channelName
+    property string channelType: ""
+    property string userId: ""
     property bool isSendingMessage: false
     property var typingUsers: []
     property var typingTimers: ({})
 
+    // Computed display name - resolve user name for DMs
+    property string displayName: {
+        if (channelType === "im" && userId) {
+            return userModel.getUserName(userId)
+        }
+        return channelName
+    }
+
     Component.onCompleted: {
         console.log("ConversationPage loaded")
-        console.log("Channel:", channelName, channelId)
+        console.log("Channel:", displayName, channelId)
 
         // Fetch messages for this channel
         refreshMessages()
@@ -148,7 +158,7 @@ Page {
         clip: true
 
         header: PageHeader {
-            title: channelName
+            title: displayName
             description: qsTr("%n messages", "", messageListView.count)
         }
 
@@ -168,7 +178,7 @@ Page {
                 onClicked: {
                     pageStack.push(Qt.resolvedUrl("ChannelInfoPage.qml"), {
                         channelId: conversationPage.channelId,
-                        channelName: conversationPage.channelName
+                        channelName: conversationPage.displayName
                     })
                 }
             }
@@ -177,7 +187,7 @@ Page {
                 onClicked: {
                     pageStack.push(Qt.resolvedUrl("PinsAndBookmarksPage.qml"), {
                         channelId: conversationPage.channelId,
-                        channelName: conversationPage.channelName
+                        channelName: conversationPage.displayName
                     })
                 }
             }
@@ -185,7 +195,7 @@ Page {
                 text: qsTr("Search")
                 onClicked: {
                     pageStack.push(Qt.resolvedUrl("SearchPage.qml"), {
-                        "searchInChannel": channelName
+                        "searchInChannel": displayName
                     })
                 }
             }

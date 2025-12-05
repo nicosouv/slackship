@@ -186,13 +186,12 @@ ListItem {
         conversationModel.updateUnreadCount(channelId, 0)
 
         // Navigate to conversation (messages will be fetched by ConversationPage)
-        var displayName = channelName
-        if (channelType === "im" && channelUserId) {
-            displayName = userModel.getUserName(channelUserId)
-        }
+        // Pass userId for DMs so ConversationPage can resolve the display name
         pageStack.push(Qt.resolvedUrl("../pages/ConversationPage.qml"), {
             "channelId": channelId,
-            "channelName": displayName
+            "channelName": channelName,
+            "channelType": channelType,
+            "userId": channelUserId
         })
     }
 
