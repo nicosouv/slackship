@@ -23,7 +23,7 @@ ListItem {
     // Format timestamp for display
     function formatMessageTime(timestamp) {
         if (!timestamp || timestamp === 0) {
-            return qsTr("No messages")
+            return ""
         }
 
         var now = new Date()
@@ -37,15 +37,15 @@ ListItem {
         }
         // Yesterday
         else if (diffDays === 1) {
-            return qsTr("Yesterday") + " " + messageDate.toLocaleTimeString(Qt.locale(), "HH:mm")
+            return qsTr("Yesterday")
         }
         // This week: show day name
         else if (diffDays < 7) {
-            return messageDate.toLocaleDateString(Qt.locale(), "dddd HH:mm")
+            return messageDate.toLocaleDateString(Qt.locale(), "dddd")
         }
         // This year: show date without year
         else if (messageDate.getFullYear() === now.getFullYear()) {
-            return messageDate.toLocaleDateString(Qt.locale(), "dd MMM HH:mm")
+            return messageDate.toLocaleDateString(Qt.locale(), "dd MMM")
         }
         // Older: show full date
         else {
@@ -130,10 +130,11 @@ ListItem {
 
             Label {
                 width: parent.width
-                text: channelTopic || channelLastMessage || formatMessageTime(channelLastMessageTime)
+                text: formatMessageTime(channelLastMessageTime)
                 truncationMode: TruncationMode.Fade
                 font.pixelSize: Theme.fontSizeExtraSmall
                 color: Theme.secondaryColor
+                visible: text.length > 0
             }
         }
 
