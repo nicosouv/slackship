@@ -177,7 +177,9 @@ ListItem {
 
         // Mark as read
         conversationModel.updateUnreadCount(channelId, 0)
-        notificationManager.clearChannelNotifications(channelId)
+        if (typeof notificationManager !== "undefined") {
+            notificationManager.clearChannelNotifications(channelId)
+        }
 
         // Set current channel and fetch messages
         messageModel.currentChannelId = channelId
@@ -206,7 +208,9 @@ ListItem {
                 var timestamp = now.toFixed(6)  // Slack timestamp format
                 slackAPI.markConversationRead(channelId, timestamp)
                 conversationModel.updateUnreadCount(channelId, 0)
-                notificationManager.clearChannelNotifications(channelId)
+                if (typeof notificationManager !== "undefined") {
+                    notificationManager.clearChannelNotifications(channelId)
+                }
             }
         }
         MenuItem {

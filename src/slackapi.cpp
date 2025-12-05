@@ -566,10 +566,28 @@ void SlackAPI::processApiResponse(const QString &endpoint, const QJsonObject &re
             // Get last message timestamp
             qint64 lastMessageTime = 0;
             if (channel.contains("latest")) {
-                QJsonObject latest = channel["latest"].toObject();
-                QString latestTs = latest["ts"].toString();
-                if (!latestTs.isEmpty()) {
-                    lastMessageTime = static_cast<qint64>(latestTs.toDouble() * 1000);
+                QJsonValue latestValue = channel["latest"];
+                if (latestValue.isObject()) {
+                    QJsonObject latest = latestValue.toObject();
+                    QString latestTs = latest["ts"].toString();
+                    if (!latestTs.isEmpty()) {
+                        lastMessageTime = static_cast<qint64>(latestTs.toDouble() * 1000);
+                    } else {
+                        // Debug: show what keys and values the latest object has
+                        qDebug() << "[SlackAPI] latest object keys:" << latest.keys();
+                        qDebug() << "[SlackAPI] latest object:" << QJsonDocument(latest).toJson(QJsonDocument::Compact);
+                    }
+                } else if (latestValue.isString()) {
+                    // Sometimes latest can be a timestamp string directly
+                    QString latestStr = latestValue.toString();
+                    qDebug() << "[SlackAPI] latest is a string:" << latestStr;
+                    if (!latestStr.isEmpty()) {
+                        lastMessageTime = static_cast<qint64>(latestStr.toDouble() * 1000);
+                    }
+                } else {
+                    qDebug() << "[SlackAPI] latest is not an object, type:" << latestValue.type()
+                             << "isNull:" << latestValue.isNull()
+                             << "isUndefined:" << latestValue.isUndefined();
                 }
             }
 
