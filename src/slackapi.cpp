@@ -589,9 +589,6 @@ void SlackAPI::processApiResponse(const QString &endpoint, const QJsonObject &re
             QString channelName = channel["name"].toString();
             bool hasLatest = channel.contains("latest");
 
-            qDebug() << "[SlackAPI] conversations.info for" << channelName << "(" << channelId << ")"
-                     << "hasLatest:" << hasLatest;
-
             // Extract unread count and last message time
             int unreadCount = 0;
 
@@ -622,16 +619,12 @@ void SlackAPI::processApiResponse(const QString &endpoint, const QJsonObject &re
             qint64 lastMessageTime = 0;
             if (channel.contains("latest")) {
                 QJsonValue latestValue = channel["latest"];
-                qDebug() << "[SlackAPI]" << channelName << "latest type:" << latestValue.type()
-                         << "isNull:" << latestValue.isNull()
-                         << "isObject:" << latestValue.isObject();
 
                 if (latestValue.isObject()) {
                     QJsonObject latest = latestValue.toObject();
                     QString latestTs = latest["ts"].toString();
                     if (!latestTs.isEmpty()) {
                         lastMessageTime = static_cast<qint64>(latestTs.toDouble() * 1000);
-                        qDebug() << "[SlackAPI]" << channelName << "got lastMessageTime:" << lastMessageTime;
                     }
                 } else if (latestValue.isString() && !latestValue.toString().isEmpty()) {
                     // Sometimes latest can be a timestamp string directly
@@ -639,9 +632,6 @@ void SlackAPI::processApiResponse(const QString &endpoint, const QJsonObject &re
                 }
                 // If latest is null, we simply don't have a timestamp - this is expected
             }
-
-            qDebug() << "[SlackAPI]" << channelName << "final unreadCount:" << unreadCount
-                     << "lastMessageTime:" << lastMessageTime;
 
             // Mark channel as done loading
             m_loadingChannels.remove(channelId);
@@ -684,7 +674,6 @@ void SlackAPI::processApiResponse(const QString &endpoint, const QJsonObject &re
                 QString latestTs = latestMessage["ts"].toString();
                 if (!latestTs.isEmpty()) {
                     qint64 lastMessageTime = static_cast<qint64>(latestTs.toDouble() * 1000);
-                    qDebug() << "[SlackAPI] Timestamp fetch for channel" << channelId << ":" << lastMessageTime;
                     emit conversationTimestampUpdated(channelId, lastMessageTime);
                 }
             }
@@ -699,7 +688,6 @@ void SlackAPI::processApiResponse(const QString &endpoint, const QJsonObject &re
             QString latestTs = latestMessage["ts"].toString();
             if (!latestTs.isEmpty()) {
                 qint64 lastMessageTime = static_cast<qint64>(latestTs.toDouble() * 1000);
-                qDebug() << "[SlackAPI] Channel" << channelId << "latest message time:" << lastMessageTime;
                 emit conversationTimestampUpdated(channelId, lastMessageTime);
             }
         }

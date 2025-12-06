@@ -88,7 +88,6 @@ ApplicationWindow {
         onConversationsUpdated: {
             // After conversations are loaded, fetch unread counts for each one
             if (conversationIds.length > 0) {
-                console.log("[App] Fetching unread counts for", conversationIds.length, "conversations")
                 slackAPI.fetchConversationUnreads(conversationIds)
             }
         }
@@ -152,7 +151,6 @@ ApplicationWindow {
             // After all unreads are fetched, get timestamps for channels that still need them
             var channelsWithoutTs = conversationModel.getChannelsWithoutTimestamp()
             if (channelsWithoutTs.length > 0) {
-                console.log("[App] Fetching timestamps for", channelsWithoutTs.length, "channels")
                 slackAPI.fetchChannelTimestamps(channelsWithoutTs)
             }
         }

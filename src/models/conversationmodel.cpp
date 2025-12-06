@@ -186,9 +186,6 @@ void ConversationModel::updateTimestamp(const QString &conversationId, qint64 la
 {
     int index = findConversationIndex(conversationId);
     if (index >= 0 && lastMessageTime > 0) {
-        qDebug() << "[ConversationModel] Updating timestamp for" << m_conversations[index].name
-                 << "from" << m_conversations[index].lastMessageTime
-                 << "to" << lastMessageTime;
         m_conversations[index].lastMessageTime = lastMessageTime;
 
         QModelIndex modelIndex = createIndex(index, 0);
@@ -214,7 +211,6 @@ QStringList ConversationModel::getChannelsWithoutTimestamp() const
             ids.append(conv.id);
         }
     }
-    qDebug() << "[ConversationModel] Channels without timestamp:" << ids.count();
     return ids;
 }
 

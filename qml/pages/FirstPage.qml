@@ -110,9 +110,12 @@ Page {
     }
 
     // Refresh list when users are loaded (to update DM names)
+    // This also handles cache-loaded users (usersReceived is not emitted for cache)
     Connections {
         target: userModel
         onUsersUpdated: {
+            usersLoaded = true
+            checkLoadingComplete()
             // Force the list to refresh so DM names are resolved
             conversationListView.model = null
             conversationListView.model = conversationModel
@@ -120,10 +123,8 @@ Page {
     }
 
     function checkLoadingComplete() {
-        console.log("[FirstPage] checkLoadingComplete: users=" + usersLoaded + " conversations=" + conversationsLoaded)
         // Only stop loading when both users and conversations are loaded
         if (usersLoaded && conversationsLoaded) {
-            console.log("[FirstPage] Loading complete - hiding spinner")
             isLoading = false
             updateVisibleCount()
         }
