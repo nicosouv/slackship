@@ -95,14 +95,8 @@ int main(int argc, char *argv[])
     // Create settings
     AppSettings *settings = new AppSettings(app.data());
 
-    // Connect workspace manager to API and stats
-    QObject::connect(workspaceManager, &WorkspaceManager::workspaceSwitched,
-                     slackAPI, [slackAPI, statsManager](int /*index*/, const QString &token) {
-        slackAPI->authenticate(token);
-        // Stats will be updated when teamIdChanged signal is emitted after authentication
-    });
-
     // Connect stats manager to API for workspace and user tracking
+    // Note: workspace switching and authentication is handled in QML (harbour-lagoon.qml)
     QObject::connect(slackAPI, &SlackAPI::teamIdChanged,
                      statsManager, [statsManager, slackAPI]() {
         statsManager->setCurrentWorkspace(slackAPI->teamId());

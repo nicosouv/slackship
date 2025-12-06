@@ -401,7 +401,15 @@ Page {
             height: visible && !isSectionCollapsed(model.section) ? implicitHeight : 0
             clip: true
             opacity: height > 0 ? 1 : 0
-            // Click handling is done inside ChannelDelegate
+
+            onChannelSelected: {
+                pageStack.push(Qt.resolvedUrl("ConversationPage.qml"), {
+                    "channelId": channelId,
+                    "channelName": channelName,
+                    "channelType": channelType,
+                    "userId": userId
+                })
+            }
         }
 
         ViewPlaceholder {

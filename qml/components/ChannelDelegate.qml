@@ -5,6 +5,7 @@ ListItem {
     id: channelItem
     contentHeight: Theme.itemSizeMedium
 
+    signal channelSelected(string channelId, string channelName, string channelType, string userId)
 
     // Support both model-based (ListView) and property-based (Repeater) usage
     // When used with modelData, these properties should be bound explicitly
@@ -185,14 +186,8 @@ ListItem {
         // Mark as read locally
         conversationModel.updateUnreadCount(channelId, 0)
 
-        // Navigate to conversation (messages will be fetched by ConversationPage)
-        // Pass userId for DMs so ConversationPage can resolve the display name
-        pageStack.push(Qt.resolvedUrl("../pages/ConversationPage.qml"), {
-            "channelId": channelId,
-            "channelName": channelName,
-            "channelType": channelType,
-            "userId": channelUserId
-        })
+        // Emit signal for parent to handle navigation
+        channelSelected(channelId, channelName, channelType, channelUserId)
     }
 
     menu: ContextMenu {
