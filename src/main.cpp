@@ -136,7 +136,10 @@ int main(int argc, char *argv[])
     });
 
     QObject::connect(slackAPI, &SlackAPI::usersReceived,
-                     userModel, &UserModel::updateUsers);
+                     userModel, [userModel, slackAPI](const QJsonArray &users) {
+        // Pass teamId to enable full user cache per workspace
+        userModel->updateUsers(users, slackAPI->teamId());
+    });
 
     // Connect API to notification manager and stats manager
     QObject::connect(slackAPI, &SlackAPI::messageReceived,

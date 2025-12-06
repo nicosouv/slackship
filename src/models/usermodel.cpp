@@ -1,8 +1,11 @@
 #include "usermodel.h"
+#include <QDateTime>
+#include <QDebug>
 
 UserModel::UserModel(QObject *parent)
     : QAbstractListModel(parent)
     , m_userCache("harbour-lagoon", "users")
+    , m_fullUserCache("harbour-lagoon", "users-full")
 {
 }
 
@@ -112,7 +115,7 @@ QVariantMap UserModel::getUserDetails(const QString &userId) const
     return details;
 }
 
-void UserModel::updateUsers(const QJsonArray &users)
+void UserModel::updateUsers(const QJsonArray &users, const QString &teamId)
 {
     beginResetModel();
     m_users.clear();
@@ -126,6 +129,12 @@ void UserModel::updateUsers(const QJsonArray &users)
     }
 
     endResetModel();
+
+    // Save full cache if teamId provided
+    if (!teamId.isEmpty()) {
+        saveFullUserCache(teamId);
+    }
+
     emit usersUpdated();
 }
 
@@ -233,4 +242,108 @@ void UserModel::saveUserToCache(const User &user)
 QString UserModel::getUserNameFromCache(const QString &userId) const
 {
     return m_userCache.value(userId).toString();
+}
+
+bool UserModel::hasFreshCache(const QString &teamId) const
+{
+    if (teamId.isEmpty()) {
+        return false;
+    }
+
+    QString timestampKey = QString("timestamp/%1").arg(teamId);
+    qint64 cachedTime = m_fullUserCache.value(timestampKey, 0).toLongLong();
+
+    if (cachedTime == 0) {
+        return false;
+    }
+
+    qint64 now = QDateTime::currentMSecsSinceEpoch();
+    qint64 ageMs = now - cachedTime;
+    qint64 maxAgeMs = CACHE_VALIDITY_HOURS * 60 * 60 * 1000;
+
+    bool isFresh = ageMs < maxAgeMs;
+    qDebug() << "[UserModel] Cache for" << teamId << "age:" << (ageMs / 1000 / 60) << "min, fresh:" << isFresh;
+
+    return isFresh;
+}
+
+bool UserModel::loadUsersFromCache(const QString &teamId)
+{
+    if (teamId.isEmpty()) {
+        return false;
+    }
+
+    QString countKey = QString("count/%1").arg(teamId);
+    int count = m_fullUserCache.value(countKey, 0).toInt();
+
+    if (count == 0) {
+        qDebug() << "[UserModel] No cached users for" << teamId;
+        return false;
+    }
+
+    qDebug() << "[UserModel] Loading" << count << "users from cache for" << teamId;
+
+    beginResetModel();
+    m_users.clear();
+
+    for (int i = 0; i < count; ++i) {
+        QString prefix = QString("users/%1/%2/").arg(teamId).arg(i);
+
+        User user;
+        user.id = m_fullUserCache.value(prefix + "id").toString();
+        user.name = m_fullUserCache.value(prefix + "name").toString();
+        user.realName = m_fullUserCache.value(prefix + "realName").toString();
+        user.displayName = m_fullUserCache.value(prefix + "displayName").toString();
+        user.avatar = m_fullUserCache.value(prefix + "avatar").toString();
+        user.statusText = m_fullUserCache.value(prefix + "statusText").toString();
+        user.statusEmoji = m_fullUserCache.value(prefix + "statusEmoji").toString();
+        user.isOnline = m_fullUserCache.value(prefix + "isOnline", false).toBool();
+        user.isBot = m_fullUserCache.value(prefix + "isBot", false).toBool();
+
+        if (!user.id.isEmpty()) {
+            m_users.append(user);
+        }
+    }
+
+    endResetModel();
+
+    qDebug() << "[UserModel] Loaded" << m_users.count() << "users from cache";
+    emit usersUpdated();
+
+    return m_users.count() > 0;
+}
+
+void UserModel::saveFullUserCache(const QString &teamId)
+{
+    if (teamId.isEmpty() || m_users.isEmpty()) {
+        return;
+    }
+
+    qDebug() << "[UserModel] Saving" << m_users.count() << "users to cache for" << teamId;
+
+    // Save timestamp
+    QString timestampKey = QString("timestamp/%1").arg(teamId);
+    m_fullUserCache.setValue(timestampKey, QDateTime::currentMSecsSinceEpoch());
+
+    // Save count
+    QString countKey = QString("count/%1").arg(teamId);
+    m_fullUserCache.setValue(countKey, m_users.count());
+
+    // Save each user
+    for (int i = 0; i < m_users.count(); ++i) {
+        const User &user = m_users.at(i);
+        QString prefix = QString("users/%1/%2/").arg(teamId).arg(i);
+
+        m_fullUserCache.setValue(prefix + "id", user.id);
+        m_fullUserCache.setValue(prefix + "name", user.name);
+        m_fullUserCache.setValue(prefix + "realName", user.realName);
+        m_fullUserCache.setValue(prefix + "displayName", user.displayName);
+        m_fullUserCache.setValue(prefix + "avatar", user.avatar);
+        m_fullUserCache.setValue(prefix + "statusText", user.statusText);
+        m_fullUserCache.setValue(prefix + "statusEmoji", user.statusEmoji);
+        m_fullUserCache.setValue(prefix + "isOnline", user.isOnline);
+        m_fullUserCache.setValue(prefix + "isBot", user.isBot);
+    }
+
+    m_fullUserCache.sync();
 }

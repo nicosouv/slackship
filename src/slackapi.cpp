@@ -99,8 +99,9 @@ void SlackAPI::fetchConversationUnreads(const QStringList &channelIds)
 
 void SlackAPI::processNextUnreadBatch()
 {
-    // Process up to 3 channels at a time with delay between batches
-    const int batchSize = 3;
+    // Process up to 2 channels at a time with delay between batches
+    // Reduced from 3 to avoid rate limiting
+    const int batchSize = 2;
     int processed = 0;
 
     while (!m_pendingUnreadFetches.isEmpty() && processed < batchSize) {
@@ -151,8 +152,9 @@ void SlackAPI::fetchChannelTimestamps(const QStringList &channelIds)
 
 void SlackAPI::processNextTimestampBatch()
 {
-    // Process up to 3 channels at a time with delay between batches
-    const int batchSize = 3;
+    // Process up to 2 channels at a time with delay between batches
+    // Reduced from 3 to avoid rate limiting
+    const int batchSize = 2;
     int processed = 0;
 
     while (!m_pendingTimestampFetches.isEmpty() && processed < batchSize) {
@@ -172,7 +174,8 @@ void SlackAPI::processNextTimestampBatch()
 
     // Schedule next batch if there are more channels
     if (!m_pendingTimestampFetches.isEmpty()) {
-        QTimer::singleShot(500, this, &SlackAPI::processNextTimestampBatch);
+        // 1000ms delay between batches to avoid rate limiting
+        QTimer::singleShot(1000, this, &SlackAPI::processNextTimestampBatch);
     }
 }
 
@@ -649,8 +652,8 @@ void SlackAPI::processApiResponse(const QString &endpoint, const QJsonObject &re
 
             // Continue processing next batch if there are more
             if (!m_pendingUnreadFetches.isEmpty()) {
-                // 500ms delay between batches to avoid rate limiting
-                QTimer::singleShot(500, this, &SlackAPI::processNextUnreadBatch);
+                // 1000ms delay between batches to avoid rate limiting
+                QTimer::singleShot(1000, this, &SlackAPI::processNextUnreadBatch);
             } else if (m_loadingChannels.isEmpty()) {
                 // All unread fetches are complete
                 qDebug() << "[SlackAPI] All unread fetches complete";

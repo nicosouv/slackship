@@ -109,7 +109,16 @@ ApplicationWindow {
             if (slackAPI.isAuthenticated) {
                 console.log("[App] Auth success:", slackAPI.workspaceName)
                 slackAPI.fetchConversations()
-                slackAPI.fetchUsers()
+
+                // Try to load users from cache first
+                var teamId = slackAPI.teamId
+                if (userModel.hasFreshCache(teamId) && userModel.loadUsersFromCache(teamId)) {
+                    console.log("[App] Users loaded from cache, skipping API call")
+                } else {
+                    console.log("[App] Fetching users from API")
+                    slackAPI.fetchUsers()
+                }
+
                 slackAPI.connectWebSocket()
             } else {
                 pageStack.replace(Qt.resolvedUrl("pages/LoginPage.qml"))

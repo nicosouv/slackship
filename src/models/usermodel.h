@@ -33,12 +33,14 @@ public:
     Q_INVOKABLE QString getUserAvatar(const QString &userId) const;
     Q_INVOKABLE int userCount(bool excludeBots = true) const;
     Q_INVOKABLE QVariantMap getUserDetails(const QString &userId) const;
+    Q_INVOKABLE bool loadUsersFromCache(const QString &teamId);
+    Q_INVOKABLE bool hasFreshCache(const QString &teamId) const;
 
 signals:
     void usersUpdated();  // Emitted when users are loaded/updated
 
 public slots:
-    void updateUsers(const QJsonArray &users);
+    void updateUsers(const QJsonArray &users, const QString &teamId = QString());
     void addUser(const QJsonObject &user);
     void updateUserStatus(const QString &userId, const QString &status, const QString &emoji);
     void updateUserPresence(const QString &userId, bool isOnline);
@@ -59,10 +61,14 @@ private:
 
     QList<User> m_users;
     QSettings m_userCache;  // Persistent cache for user names
+    QSettings m_fullUserCache;  // Full user data cache per workspace
     int findUserIndex(const QString &userId) const;
     User parseUser(const QJsonObject &json) const;
     void saveUserToCache(const User &user);
     QString getUserNameFromCache(const QString &userId) const;
+    void saveFullUserCache(const QString &teamId);
+
+    static const int CACHE_VALIDITY_HOURS = 6;  // Cache valid for 6 hours
 };
 
 #endif // USERMODEL_H
