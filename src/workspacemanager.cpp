@@ -61,12 +61,25 @@ QHash<int, QByteArray> WorkspaceManager::roleNames() const
 
 void WorkspaceManager::setCurrentWorkspaceIndex(int index)
 {
-    if (index < 0 || index >= m_workspaces.count())
+    qDebug() << "[Workspace] setCurrentWorkspaceIndex called with index:" << index
+             << "current:" << m_currentWorkspaceIndex
+             << "count:" << m_workspaces.count();
+
+    if (index < 0 || index >= m_workspaces.count()) {
+        qWarning() << "[Workspace] Invalid index:" << index;
         return;
+    }
 
     if (m_currentWorkspaceIndex != index) {
+        QString targetTeamId = m_workspaces[index].teamId;
+        QString targetName = m_workspaces[index].name;
+        QString targetToken = m_workspaces[index].token;
+
+        qDebug() << "[Workspace] Switching to:" << targetName << "teamId:" << targetTeamId;
+
         // Mark old workspace as inactive
         if (m_currentWorkspaceIndex >= 0 && m_currentWorkspaceIndex < m_workspaces.count()) {
+            qDebug() << "[Workspace] Marking old workspace inactive:" << m_workspaces[m_currentWorkspaceIndex].name;
             m_workspaces[m_currentWorkspaceIndex].isActive = false;
         }
 
@@ -78,8 +91,24 @@ void WorkspaceManager::setCurrentWorkspaceIndex(int index)
         saveWorkspaces();
         sortByLastUsed();
 
+        // After sorting, find the new index of the target workspace
+        int newIndex = -1;
+        for (int i = 0; i < m_workspaces.count(); ++i) {
+            if (m_workspaces[i].teamId == targetTeamId) {
+                newIndex = i;
+                break;
+            }
+        }
+
+        qDebug() << "[Workspace] After sort, new index:" << newIndex
+                 << "currentWorkspaceIndex:" << m_currentWorkspaceIndex;
+
         emit currentWorkspaceChanged();
-        emit workspaceSwitched(index, m_workspaces[index].token);
+        emit workspaceSwitched(m_currentWorkspaceIndex, targetToken);
+
+        qDebug() << "[Workspace] Switch complete, emitted workspaceSwitched with token length:" << targetToken.length();
+    } else {
+        qDebug() << "[Workspace] Already on this workspace, no switch needed";
     }
 }
 
@@ -179,6 +208,7 @@ void WorkspaceManager::removeWorkspace(int index)
 
 void WorkspaceManager::switchWorkspace(int index)
 {
+    qDebug() << "[Workspace] switchWorkspace called with index:" << index;
     setCurrentWorkspaceIndex(index);
 }
 

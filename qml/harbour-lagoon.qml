@@ -36,13 +36,16 @@ ApplicationWindow {
         target: workspaceManager
 
         onWorkspaceSwitched: {
-            console.log("[App] Workspace switched to index:", index)
+            console.log("[App] Workspace switched to index:", index, "token length:", token.length)
+            console.log("[App] Clearing models and re-authenticating...")
             conversationModel.clear()
             messageModel.clear()
             userModel.clear()
             slackAPI.disconnectWebSocket()
+            console.log("[App] Calling slackAPI.authenticate with new token")
             slackAPI.authenticate(token)
             fileManager.setToken(token)
+            console.log("[App] Workspace switch handler complete")
         }
     }
 
