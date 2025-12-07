@@ -330,7 +330,8 @@ function reactionNameToTwemojiUrl(reactionName, size) {
 }
 
 // Format Slack mrkdwn to HTML (for RichText)
-function formatSlackText(text) {
+// userLookup is an optional function(userId) that returns the username
+function formatSlackText(text, userLookup) {
     if (!text) return text
 
     // First, escape HTML entities
@@ -347,8 +348,15 @@ function formatSlackText(text) {
     text = text.replace(/&lt;!here&gt;/g, '<b>@here</b>')
     text = text.replace(/&lt;!everyone&gt;/g, '<b>@everyone</b>')
 
-    // Convert user mentions: <@USERID> -> @user (we'd need to look up the actual name)
-    text = text.replace(/&lt;@([A-Z0-9]+)&gt;/g, '<b>@user</b>')
+    // Convert user mentions: <@USERID> -> @username
+    if (userLookup) {
+        text = text.replace(/&lt;@([A-Z0-9]+)&gt;/g, function(match, userId) {
+            var userName = userLookup(userId)
+            return '<b>@' + (userName || userId) + '</b>'
+        })
+    } else {
+        text = text.replace(/&lt;@([A-Z0-9]+)&gt;/g, '<b>@$1</b>')
+    }
 
     // Convert channel mentions: <#CHANNELID|channelname> or <#CHANNELID>
     text = text.replace(/&lt;#[A-Z0-9]+\|([^\>]+)&gt;/g, '<b>#$1</b>')

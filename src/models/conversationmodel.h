@@ -44,6 +44,7 @@ public slots:
     void updateUnreadInfo(const QString &conversationId, int unreadCount, qint64 lastMessageTime);
     void updateTimestamp(const QString &conversationId, qint64 lastMessageTime);
     void incrementUnread(const QString &conversationId, qint64 messageTimestamp);  // RTM: increment unread on new message
+    void markAsRead(const QString &conversationId);  // Mark channel as read and save timestamp
     void toggleStar(const QString &conversationId);
     void clear();  // Clear all conversations (for workspace switch)
     void setTeamId(const QString &teamId);  // Set current workspace team ID
@@ -80,12 +81,16 @@ private:
     QList<Conversation> m_conversations;
     QString m_currentTeamId;
     QSettings m_starredSettings;
+    QSettings m_lastReadSettings;  // Store last read timestamps per channel
 
     int findConversationIndex(const QString &conversationId) const;
     Conversation parseConversation(const QJsonObject &json) const;
     void sortConversations();
     void loadStarredChannels();
     void saveStarredChannels();
+    void loadLastReadTimestamps();
+    void saveLastReadTimestamp(const QString &channelId, qint64 timestamp);
+    qint64 getLastReadTimestamp(const QString &channelId) const;
 };
 
 #endif // CONVERSATIONMODEL_H

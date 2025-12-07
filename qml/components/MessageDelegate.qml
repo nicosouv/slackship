@@ -266,7 +266,9 @@ ListItem {
 
             Label {
                 width: parent.width
-                text: EmojiHelper.formatSlackText(model.text)
+                text: EmojiHelper.formatSlackText(model.text, function(userId) {
+                    return userModel.getUserName(userId)
+                })
                 wrapMode: Text.Wrap
                 font.pixelSize: Theme.fontSizeSmall
                 color: Theme.primaryColor
