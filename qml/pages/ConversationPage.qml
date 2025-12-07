@@ -186,8 +186,8 @@ Page {
         var beforeMention = text.substring(0, mentionStartPos)
         var afterMention = text.substring(mentionStartPos + mentionQuery.length + 1)
 
-        // Slack mention format: <@USER_ID>
-        var mention = "<@" + userId + "> "
+        // Display readable @username (will be converted to Slack format on send)
+        var mention = "@" + userName + " "
         messageInput.text = beforeMention + mention + afterMention
         messageInput.cursorPosition = beforeMention.length + mention.length
 
@@ -195,6 +195,33 @@ Page {
         mentionQuery = ""
         mentionStartPos = -1
         mentionSuggestions = []
+    }
+
+    // Convert @username mentions to Slack format <@USER_ID> before sending
+    function convertMentionsToSlackFormat(text) {
+        // Find all @mentions and replace with Slack format
+        var result = text
+        var mentionRegex = /@(\w+)/g
+        var match
+
+        // We need to process matches from end to start to preserve positions
+        var matches = []
+        while ((match = mentionRegex.exec(text)) !== null) {
+            matches.push({index: match.index, username: match[1], fullMatch: match[0]})
+        }
+
+        // Process from end to start
+        for (var i = matches.length - 1; i >= 0; i--) {
+            var m = matches[i]
+            var userId = userModel.getUserIdByName(m.username)
+            if (userId && userId.length > 0) {
+                var before = result.substring(0, m.index)
+                var after = result.substring(m.index + m.fullMatch.length)
+                result = before + "<@" + userId + ">" + after
+            }
+        }
+
+        return result
     }
 
     SilicaListView {
@@ -421,7 +448,7 @@ Page {
                     onClicked: {
                         if (messageInput.text.trim().length > 0) {
                             isSendingMessage = true
-                            var messageText = messageInput.text
+                            var messageText = convertMentionsToSlackFormat(messageInput.text)
                             messageInput.text = ""
                             clearDraft()  // Clear saved draft after sending
                             slackAPI.sendMessage(channelId, messageText)

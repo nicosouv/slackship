@@ -385,3 +385,16 @@ QVariantList UserModel::searchUsers(const QString &query, int maxResults) const
 
     return results;
 }
+
+QString UserModel::getUserIdByName(const QString &username) const
+{
+    QString lowerUsername = username.toLower();
+
+    for (const User &user : m_users) {
+        if (user.name.toLower() == lowerUsername) {
+            return user.id;
+        }
+    }
+
+    return QString();
+}

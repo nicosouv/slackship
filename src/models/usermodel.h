@@ -36,6 +36,7 @@ public:
     Q_INVOKABLE bool loadUsersFromCache(const QString &teamId);
     Q_INVOKABLE bool hasFreshCache(const QString &teamId) const;
     Q_INVOKABLE QVariantList searchUsers(const QString &query, int maxResults = 10) const;
+    Q_INVOKABLE QString getUserIdByName(const QString &username) const;
 
 signals:
     void usersUpdated();  // Emitted when users are loaded/updated
