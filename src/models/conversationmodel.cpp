@@ -499,22 +499,29 @@ void ConversationModel::saveStarredChannels()
     m_starredSettings.sync();
 }
 
-void ConversationModel::markAsRead(const QString &conversationId)
+void ConversationModel::markAsRead(const QString &conversationId, qint64 timestamp)
 {
     int index = findConversationIndex(conversationId);
     if (index >= 0) {
-        qint64 lastMessageTime = m_conversations[index].lastMessageTime;
+        // Use provided timestamp, or fall back to conversation's lastMessageTime
+        qint64 readTimestamp = timestamp > 0 ? timestamp : m_conversations[index].lastMessageTime;
         int oldCount = m_conversations[index].unreadCount;
 
+        qDebug() << "[ConversationModel] markAsRead" << conversationId << "timestamp:" << readTimestamp;
+
         // Save the last read timestamp
-        if (lastMessageTime > 0) {
-            saveLastReadTimestamp(conversationId, lastMessageTime);
+        if (readTimestamp > 0) {
+            saveLastReadTimestamp(conversationId, readTimestamp);
+            // Also update the conversation's lastMessageTime if we have a newer timestamp
+            if (readTimestamp > m_conversations[index].lastMessageTime) {
+                m_conversations[index].lastMessageTime = readTimestamp;
+            }
         }
 
         // Clear unread count
         m_conversations[index].unreadCount = 0;
         QModelIndex modelIndex = createIndex(index, 0);
-        emit dataChanged(modelIndex, modelIndex, {UnreadCountRole, SectionRole});
+        emit dataChanged(modelIndex, modelIndex, {UnreadCountRole, LastMessageTimeRole, SectionRole});
 
         // Re-sort if was unread
         if (oldCount > 0) {

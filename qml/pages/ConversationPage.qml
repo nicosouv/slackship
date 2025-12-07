@@ -68,8 +68,10 @@ Page {
 
         if (latestTimestamp && latestTimestamp.length > 0) {
             slackAPI.markConversationRead(channelId, latestTimestamp)
-            // Update local unread count and save last read timestamp
-            conversationModel.markAsRead(channelId)
+            // Convert Slack timestamp to milliseconds and save locally
+            var timestampMs = Math.floor(parseFloat(latestTimestamp) * 1000)
+            console.log("[ConversationPage] markAsRead timestamp:", latestTimestamp, "->", timestampMs)
+            conversationModel.markAsRead(channelId, timestampMs)
         }
     }
 
